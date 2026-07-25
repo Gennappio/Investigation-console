@@ -1,0 +1,39 @@
+apiVersion: lab/v1
+kind: Repository
+
+metadata:
+  name: tcell-model
+  description: Agent-based model of T-cell differentiation
+  owners:
+    - anna.rossi
+
+spec:
+  project: PRJ-000001
+
+  runtime:
+    type: python
+    version: "3.12"
+
+  container:
+    dockerfile: containers/Dockerfile
+    context: .
+
+  commands:
+    test:
+      - pytest
+      - -q
+    run:
+      - python
+      - -m
+      - tcell_model.run
+      - --config
+      - "${LAB_EXPERIMENT_CONFIG}"
+
+  outputs:
+    directory: results
+
+  reporting:
+    template: default
+
+  obsidian:
+    project_note: Projects/PRJ-000001.md

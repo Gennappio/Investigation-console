@@ -1,0 +1,19 @@
+apiVersion: lab/v1
+kind: Experiment
+
+metadata:
+  id: EXP-000001
+  title: Resources without a time limit
+  project: PRJ-000001
+  owner: anna.rossi
+
+scientific:
+  question: Is an unbounded wall time accepted?
+  hypothesis: It must not be.
+  references:
+    - doi:10.0000/example
+
+execution:
+  resources:
+    cpus: 32
+    memory: 128GiB

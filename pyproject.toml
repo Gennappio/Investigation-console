@@ -39,6 +39,9 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["lab_domain", "lab_registry", "lab_cli"]
+
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
@@ -46,3 +49,6 @@ plugins = ["pydantic.mypy"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# Import the packages from the source tree, so the suite does not depend on the
+# editable install being resolvable (see README, macOS hidden .pth caveat).
+pythonpath = ["packages"]

@@ -1,0 +1,21 @@
+apiVersion: lab/v1
+kind: Experiment
+
+metadata:
+  id: EXP-000001
+  title: Typo in a field name
+  project: PRJ-000001
+  owner: anna.rossi
+
+scientific:
+  question: Does this parse?
+  hypothesis: It must not.
+  references:
+    - doi:10.0000/example
+
+execution:
+  hypotesis: misspelled
+  resources:
+    cpus: 1
+    memory: 1GiB
+    time_limit: "00:10:00"

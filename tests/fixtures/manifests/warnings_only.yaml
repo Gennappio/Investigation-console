@@ -1,0 +1,20 @@
+apiVersion: lab/v1
+kind: Experiment
+
+metadata:
+  id: EXP-000004
+  title: Minimal but valid
+  project: PRJ-000001
+  owner: anna.rossi
+
+scientific:
+  question: Does a sparse experiment validate with warnings?
+  hypothesis: It does.
+
+execution:
+  parameters:
+    repetitions: 1
+  resources:
+    cpus: 1
+    memory: 1GiB
+    time_limit: "00:10:00"

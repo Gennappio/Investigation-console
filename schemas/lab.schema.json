@@ -1,0 +1,222 @@
+{
+  "$defs": {
+    "ContainerSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "default": ".",
+          "title": "Context",
+          "type": "string"
+        },
+        "dockerfile": {
+          "title": "Dockerfile",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dockerfile"
+      ],
+      "title": "ContainerSpec",
+      "type": "object"
+    },
+    "ObsidianSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "project_note": {
+          "title": "Project Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_note"
+      ],
+      "title": "ObsidianSpec",
+      "type": "object"
+    },
+    "OutputsSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "directory": {
+          "minLength": 1,
+          "title": "Directory",
+          "type": "string"
+        }
+      },
+      "required": [
+        "directory"
+      ],
+      "title": "OutputsSpec",
+      "type": "object"
+    },
+    "ReportingSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "default": "default",
+          "title": "Template",
+          "type": "string"
+        }
+      },
+      "title": "ReportingSpec",
+      "type": "object"
+    },
+    "RepositoryMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "name": {
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "owners": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Owners",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "RepositoryMetadata",
+      "type": "object"
+    },
+    "RepositorySpec": {
+      "additionalProperties": false,
+      "properties": {
+        "commands": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "default": {},
+          "title": "Commands",
+          "type": "object"
+        },
+        "container": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContainerSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "obsidian": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ObsidianSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "outputs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputsSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project": {
+          "pattern": "^PRJ-[0-9]{6}$",
+          "title": "Project",
+          "type": "string"
+        },
+        "reporting": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReportingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "runtime": {
+          "$ref": "#/$defs/RuntimeSpec"
+        }
+      },
+      "required": [
+        "project",
+        "runtime"
+      ],
+      "title": "RepositorySpec",
+      "type": "object"
+    },
+    "RuntimeSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "version"
+      ],
+      "title": "RuntimeSpec",
+      "type": "object"
+    }
+  },
+  "$id": "lab.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Root-level ``lab.yaml`` of a managed repository.",
+  "properties": {
+    "apiVersion": {
+      "const": "lab/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "const": "Repository",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/RepositoryMetadata"
+    },
+    "spec": {
+      "$ref": "#/$defs/RepositorySpec"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "RepositoryManifest",
+  "type": "object"
+}

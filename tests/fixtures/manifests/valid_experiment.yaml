@@ -1,0 +1,36 @@
+apiVersion: lab/v1
+kind: Experiment
+
+metadata:
+  id: EXP-000001
+  title: IL-6 and Th17 differentiation
+  project: PRJ-000001
+  owner: anna.rossi
+
+scientific:
+  question: Does increasing IL-6 alter the final Th1/Th17 ratio?
+  hypothesis: Higher IL-6 increases the stable Th17 fraction.
+  references:
+    - doi:10.0000/example
+
+execution:
+  component: CMP-000001
+  dataset_refs:
+    - id: DATA-000001
+      version: v4
+  parameters:
+    il6_values: [0, 1, 2, 5, 10]
+    repetitions: 30
+  seeds:
+    strategy: explicit
+    values: [101, 102, 103]
+  resources:
+    cpus: 32
+    memory: 128GiB
+    time_limit: "06:00:00"
+
+validation:
+  software_tests: required
+  integration_tests: required
+  reproducibility_tests: required
+  scientific_validation: optional

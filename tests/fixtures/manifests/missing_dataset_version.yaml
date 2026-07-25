@@ -1,0 +1,28 @@
+apiVersion: lab/v1
+kind: Experiment
+
+metadata:
+  id: EXP-000001
+  title: Unversioned dataset reference
+  project: PRJ-000001
+  owner: anna.rossi
+
+scientific:
+  question: Is an unversioned dataset reproducible?
+  hypothesis: It is not.
+  references:
+    - doi:10.0000/example
+
+execution:
+  dataset_refs:
+    - DATA-000001
+  seeds:
+    strategy: explicit
+    values: [101]
+  resources:
+    cpus: 1
+    memory: 1GiB
+    time_limit: "00:10:00"
+
+validation:
+  software_tests: required

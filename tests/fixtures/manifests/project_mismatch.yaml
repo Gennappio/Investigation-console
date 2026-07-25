@@ -1,0 +1,26 @@
+apiVersion: lab/v1
+kind: Experiment
+
+metadata:
+  id: EXP-000003
+  title: Experiment of another project
+  project: PRJ-000999
+  owner: anna.rossi
+
+scientific:
+  question: Does the project reference have to match the repository?
+  hypothesis: It does.
+  references:
+    - doi:10.0000/example
+
+execution:
+  seeds:
+    strategy: explicit
+    values: [101]
+  resources:
+    cpus: 1
+    memory: 1GiB
+    time_limit: "00:10:00"
+
+validation:
+  software_tests: required

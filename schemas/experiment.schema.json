@@ -1,0 +1,290 @@
+{
+  "$defs": {
+    "DatasetRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^DATA-[0-9]{6}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Version"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "DatasetRef",
+      "type": "object"
+    },
+    "ExecutionSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "anyOf": [
+            {
+              "pattern": "^CMP-[0-9]{6}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Component"
+        },
+        "dataset_refs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DatasetRef"
+          },
+          "title": "Dataset Refs",
+          "type": "array"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "default": {},
+          "title": "Parameters",
+          "type": "object"
+        },
+        "resources": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResourceSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "seeds": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SeedSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "ExecutionSpec",
+      "type": "object"
+    },
+    "ExperimentMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^EXP-[0-9]{6}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "owner": {
+          "title": "Owner",
+          "type": "string"
+        },
+        "project": {
+          "pattern": "^PRJ-[0-9]{6}$",
+          "title": "Project",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "project",
+        "owner"
+      ],
+      "title": "ExperimentMetadata",
+      "type": "object"
+    },
+    "ResourceSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "cpus": {
+          "minimum": 1,
+          "title": "Cpus",
+          "type": "integer"
+        },
+        "gpus": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Gpus",
+          "type": "integer"
+        },
+        "memory": {
+          "title": "Memory",
+          "type": "string"
+        },
+        "time_limit": {
+          "title": "Time Limit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "cpus",
+        "memory",
+        "time_limit"
+      ],
+      "title": "ResourceSpec",
+      "type": "object"
+    },
+    "ScientificSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "hypothesis": {
+          "title": "Hypothesis",
+          "type": "string"
+        },
+        "question": {
+          "title": "Question",
+          "type": "string"
+        },
+        "references": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "References",
+          "type": "array"
+        }
+      },
+      "required": [
+        "question",
+        "hypothesis"
+      ],
+      "title": "ScientificSpec",
+      "type": "object"
+    },
+    "SeedSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "enum": [
+            "explicit",
+            "derived"
+          ],
+          "title": "Strategy",
+          "type": "string"
+        },
+        "values": {
+          "default": [],
+          "items": {
+            "type": "integer"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "strategy"
+      ],
+      "title": "SeedSpec",
+      "type": "object"
+    },
+    "ValidationRequirements": {
+      "additionalProperties": false,
+      "properties": {
+        "integration_tests": {
+          "default": "required",
+          "enum": [
+            "required",
+            "optional"
+          ],
+          "title": "Integration Tests",
+          "type": "string"
+        },
+        "reproducibility_tests": {
+          "default": "required",
+          "enum": [
+            "required",
+            "optional"
+          ],
+          "title": "Reproducibility Tests",
+          "type": "string"
+        },
+        "scientific_validation": {
+          "default": "optional",
+          "enum": [
+            "required",
+            "optional"
+          ],
+          "title": "Scientific Validation",
+          "type": "string"
+        },
+        "software_tests": {
+          "default": "required",
+          "enum": [
+            "required",
+            "optional"
+          ],
+          "title": "Software Tests",
+          "type": "string"
+        }
+      },
+      "title": "ValidationRequirements",
+      "type": "object"
+    }
+  },
+  "$id": "experiment.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Version-controlled specification of one experiment.",
+  "properties": {
+    "apiVersion": {
+      "const": "lab/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "execution": {
+      "$ref": "#/$defs/ExecutionSpec"
+    },
+    "kind": {
+      "const": "Experiment",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/ExperimentMetadata"
+    },
+    "scientific": {
+      "$ref": "#/$defs/ScientificSpec"
+    },
+    "validation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ValidationRequirements"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "scientific",
+    "execution"
+  ],
+  "title": "ExperimentManifest",
+  "type": "object"
+}

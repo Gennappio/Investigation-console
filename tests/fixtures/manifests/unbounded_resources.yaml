@@ -1,0 +1,24 @@
+apiVersion: lab/v1
+kind: Experiment
+
+metadata:
+  id: EXP-000002
+  title: No resource request
+  project: PRJ-000001
+  owner: anna.rossi
+
+scientific:
+  question: What happens without a resource request?
+  hypothesis: Validation fails.
+  references:
+    - doi:10.0000/example
+
+execution:
+  parameters:
+    repetitions: 1
+  seeds:
+    strategy: explicit
+    values: [101]
+
+validation:
+  software_tests: required

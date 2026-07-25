@@ -1,0 +1,20 @@
+apiVersion: lab/v2
+kind: Experiment
+
+metadata:
+  id: EXP-000001
+  title: Future schema
+  project: PRJ-000001
+  owner: anna.rossi
+
+scientific:
+  question: Does this parse?
+  hypothesis: It must not.
+  references:
+    - doi:10.0000/example
+
+execution:
+  resources:
+    cpus: 1
+    memory: 1GiB
+    time_limit: "00:10:00"

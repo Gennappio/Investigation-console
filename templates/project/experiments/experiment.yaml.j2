@@ -1,0 +1,36 @@
+apiVersion: lab/v1
+kind: Experiment
+
+metadata:
+  id: {{ experiment_id }}
+  title: Demo experiment
+  project: {{ project_id }}
+  owner: {{ owner }}
+
+scientific:
+  question: Replace with the scientific question this experiment answers.
+  hypothesis: Replace with the falsifiable hypothesis.
+  references:
+    - doi:10.0000/replace-me
+
+execution:
+  # component: CMP-000001        # optional: a component from the registry (Milestone 4)
+  dataset_refs: []
+  # dataset_refs:                # datasets always need an explicit version:
+  #   - id: DATA-000001
+  #     version: v1
+  parameters:
+    repetitions: 2
+  seeds:
+    strategy: explicit
+    values: [101]
+  resources:
+    cpus: 1
+    memory: 1GiB
+    time_limit: "00:10:00"
+
+validation:
+  software_tests: required
+  integration_tests: required
+  reproducibility_tests: required
+  scientific_validation: optional

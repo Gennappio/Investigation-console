@@ -1,0 +1,4 @@
+# Small config for the smoke command (flat scalars only).
+il6: 1.0
+repetitions: 2
+seed: 101

@@ -30,8 +30,11 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["packages/lab_domain", "packages/lab_registry", "packages/lab_cli"]
 
-[tool.hatch.build.targets.wheel.force-include]
-"templates/project" = "lab_cli/_templates/project"
+# Templates are data, not importable code: installing them under the
+# environment's share/ prefix keeps them out of site-packages, where they would
+# otherwise shadow the lab_cli package in an editable install.
+[tool.hatch.build.targets.wheel.shared-data]
+"templates" = "share/lab-platform/templates"
 
 [tool.ruff]
 target-version = "py312"

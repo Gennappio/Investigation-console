@@ -22,6 +22,7 @@ class ArtifactKind(StrEnum):
     SNAPSHOT = "snapshot"
     CHECKSUMS = "checksums"
     BUILD_LOG = "build_log"
+    JOB_SCRIPT = "job_script"
     TEST_RESULT = "test_result"
 
 

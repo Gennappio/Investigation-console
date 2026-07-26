@@ -130,6 +130,24 @@ class RunRecord(RunModel):
     def is_terminal(self) -> bool:
         return self.status in TERMINAL_STATUSES
 
+    def amended(self, **changes: Any) -> Self:
+        """Record something learned about the run without changing its state.
+
+        Used when a backend reports a job identifier for a run that stays
+        queued: the state machine has no self-transition for that.
+        """
+        forbidden = IMMUTABLE_FIELDS & set(changes)
+        if forbidden:
+            raise ImmutableRunError(
+                f"Run {self.id}: {', '.join(sorted(forbidden))} cannot change "
+                "after the run is recorded."
+            )
+        if "status" in changes:
+            raise ImmutableRunError(
+                f"Run {self.id}: use transitioned_to() to change the status."
+            )
+        return self.model_copy(update=changes)
+
     def transitioned_to(self, status: RunStatus, **changes: Any) -> Self:
         """Derive the next record, rejecting impossible transitions."""
         allowed = ALLOWED_TRANSITIONS[self.status]

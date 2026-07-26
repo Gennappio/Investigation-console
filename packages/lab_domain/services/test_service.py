@@ -14,11 +14,13 @@ from lab_domain.artifacts import ArtifactKind
 from lab_domain.errors import ManifestInvalidError
 from lab_domain.execution import ExecutionBackend, JobState, RunRequest
 from lab_domain.ids import ArtifactId, RunId
+from lab_domain.runs import ResourceRequest
 from lab_domain.services.workspace_context import WorkspaceContext
 from lab_domain.storage import ArtifactStore, RunStore
 from lab_domain.suites import Check, CheckStatus, SuiteKind, SuiteResult
 
 POLL_INTERVAL_SECONDS = 0.05
+TEST_RESOURCES = ResourceRequest(cpus=1, memory_mb=1024)
 
 PROFILE_SUITES = {
     "test": SuiteKind.SOFTWARE,
@@ -64,6 +66,9 @@ def run_test_profile(
         working_directory=context.root,
         output_directory=scratch / "outputs",
         log_directory=scratch / "logs",
+        # A test profile runs on the machine that invoked it, not through a
+        # scheduler, so it reserves nothing.
+        resources=TEST_RESOURCES,
     )
     submission = backend.submit(request)
     while backend.status(submission.external_job_id).state is JobState.RUNNING:

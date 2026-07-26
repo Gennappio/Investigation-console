@@ -19,6 +19,7 @@ from lab_domain.errors import (
     LabError,
     ManifestInvalidError,
     NotFoundError,
+    PolicyViolationError,
     StateStoreError,
     TargetExistsError,
     TestsFailedError,
@@ -47,6 +48,7 @@ _BY_ERROR: dict[type[LabError], ExitCode] = {
     # the code of a failed validation. 11 is reserved for record lookups.
     WorkspaceNotFoundError: ExitCode.VALIDATION_FAILED,
     ManifestInvalidError: ExitCode.VALIDATION_FAILED,
+    PolicyViolationError: ExitCode.VALIDATION_FAILED,
     InvalidNameError: ExitCode.INVALID_INPUT,
     StateStoreError: ExitCode.ENVIRONMENT_ERROR,
     DependencyError: ExitCode.ENVIRONMENT_ERROR,

@@ -9,9 +9,7 @@ controlled environment rather than interpolated as text.
 from __future__ import annotations
 
 import os
-import re
 import subprocess
-from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -26,25 +24,11 @@ from lab_domain.execution import (
     RunRequest,
     SubmissionResult,
 )
+from lab_execution.process import expand_placeholders
 
-PLACEHOLDER = re.compile(r"\$\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 STDOUT_FILENAME = "stdout.log"
 STDERR_FILENAME = "stderr.log"
 TERMINATION_GRACE_SECONDS = 5
-
-
-def expand_placeholders(
-    argv: Sequence[str], environment: dict[str, str]
-) -> tuple[str, ...]:
-    """Replace ``${NAME}`` in an argument list from ``environment``.
-
-    Unknown names are left untouched: silently emptying an argument would
-    change what is executed without saying so.
-    """
-    return tuple(
-        PLACEHOLDER.sub(lambda m: environment.get(m["name"], m[0]), argument)
-        for argument in argv
-    )
 
 
 @dataclass

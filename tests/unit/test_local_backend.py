@@ -9,6 +9,7 @@ from lab_execution.local_backend import LocalExecutionBackend, expand_placeholde
 
 from lab_domain.errors import ExecutionFailedError, NotFoundError
 from lab_domain.execution import ExecutionBackend, JobState, RunRequest
+from lab_domain.runs import ResourceRequest
 
 
 def make_request(tmp_path: Path, *argv: str, timeout: int | None = None) -> RunRequest:
@@ -19,6 +20,7 @@ def make_request(tmp_path: Path, *argv: str, timeout: int | None = None) -> RunR
         working_directory=tmp_path / "work",
         output_directory=tmp_path / "work" / "results",
         log_directory=tmp_path / "logs",
+        resources=ResourceRequest(cpus=1, memory_mb=1024),
         timeout_seconds=timeout,
     )
 

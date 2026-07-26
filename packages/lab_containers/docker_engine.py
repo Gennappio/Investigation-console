@@ -8,10 +8,10 @@ runner is injected so the argument lists can be tested without a daemon.
 from __future__ import annotations
 
 import json
-import subprocess
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Protocol
+
+from lab_execution.process import CommandRunner, subprocess_runner
 
 from lab_domain.containers import (
     BuildOutcome,
@@ -23,38 +23,6 @@ from lab_domain.errors import BuildFailedError, DependencyError
 
 DOCKER = "docker"
 AVAILABILITY_TIMEOUT_SECONDS = 20
-
-
-class CommandResult(Protocol):
-    returncode: int
-    stdout: str
-    stderr: str
-
-
-class CommandRunner(Protocol):
-    def __call__(
-        self, argv: Sequence[str], *, timeout: int | None = None
-    ) -> CommandResult: ...
-
-
-def subprocess_runner(
-    argv: Sequence[str], *, timeout: int | None = None
-) -> subprocess.CompletedProcess[str]:
-    try:
-        return subprocess.run(
-            list(argv),
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
-    except FileNotFoundError as exc:
-        raise DependencyError(
-            f"{argv[0]} is not installed or not on PATH. Install Docker, or run "
-            "without a container."
-        ) from exc
-    except subprocess.TimeoutExpired as exc:
-        raise DependencyError(f"{argv[0]} did not respond within {timeout}s.") from exc
 
 
 class DockerEngine:

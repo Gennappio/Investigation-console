@@ -12,7 +12,15 @@ from lab_domain.services.report_service import (
     ReportDocument,
     generate_report,
 )
-from lab_domain.services.run_service import RunOutcome, execute_run, scratch_directory
+from lab_domain.services.run_service import (
+    RunOutcome,
+    cancel_run,
+    execute_run,
+    refresh_run,
+    scratch_directory,
+    start_run,
+    wait_for_run,
+)
 from lab_domain.services.test_service import run_test_profile, suite_for_profile
 from lab_domain.services.validate_service import validate_workspace
 from lab_domain.services.workspace_context import (
@@ -30,14 +38,18 @@ __all__ = [
     "WorkspaceContext",
     "WorkspaceInfo",
     "build_image",
+    "cancel_run",
     "execute_run",
     "generate_report",
     "image_tag",
     "init_project",
     "inspect_workspace",
     "load_validated_workspace",
+    "refresh_run",
     "run_test_profile",
     "scratch_directory",
+    "start_run",
     "suite_for_profile",
+    "wait_for_run",
     "validate_workspace",
 ]

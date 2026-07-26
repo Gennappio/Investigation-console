@@ -79,6 +79,7 @@ def test_run_records_the_execution(
         "status",
         "backend",
         "experiment_id",
+        "external_job_id",
         "exit_code",
         "container_digest",
         "configuration_hash",
@@ -97,9 +98,19 @@ def test_run_records_the_execution(
 
 
 def test_run_refuses_an_unknown_backend(invoke: Invoke, project: Path) -> None:
-    result = invoke("run", "--backend", "slurm", cwd=project)
+    result = invoke("run", "--backend", "kubernetes", cwd=project)
     assert result.exit_code == ExitCode.EXECUTION_FAILED
-    assert "Milestone 3" in result.stderr
+    assert "Available: local, slurm" in result.stderr
+
+
+def test_slurm_without_the_scheduler_is_an_environment_error(
+    invoke: Invoke, project: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Off-cluster there is no sbatch, and that is reported as such."""
+    monkeypatch.setenv("PATH", str(project))
+    result = invoke("run", "--backend", "slurm", "--no-container", cwd=project)
+    assert result.exit_code == ExitCode.ENVIRONMENT_ERROR
+    assert "sbatch" in result.stderr
 
 
 def test_run_refuses_invalid_manifests(

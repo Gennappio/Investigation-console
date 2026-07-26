@@ -1,4 +1,9 @@
-"""`lab status`: what is recorded about a run."""
+"""`lab status`: what is recorded about a run.
+
+For a backend that outlives the submitting process, this is also where a
+finished job is reconciled: its state is read from the scheduler and, once it
+has ended, its outputs are collected into permanent storage.
+"""
 
 from __future__ import annotations
 
@@ -10,21 +15,50 @@ from lab_cli.exit_codes import ExitCode
 from lab_cli.identifiers import parse_id
 from lab_cli.options import JSON_OPTION
 from lab_cli.output import emit, run_or_fail
-from lab_cli.runtime import default_artifact_store, default_run_store
+from lab_cli.runtime import (
+    actor,
+    default_artifact_store,
+    default_audit_log,
+    default_policy,
+    default_run_store,
+    execution_backend,
+    lab_home,
+)
 from lab_domain.artifacts import ArtifactRecord
 from lab_domain.ids import RunId
 from lab_domain.runs import RunRecord
+from lab_domain.services import refresh_run
 
 
 def status(
     run_id: Annotated[str, typer.Argument(help="Run identifier, e.g. RUN-000001.")],
     json_output: Annotated[bool, JSON_OPTION] = False,
+    no_refresh: Annotated[
+        bool,
+        typer.Option(
+            "--no-refresh", help="Report what is stored without asking the backend."
+        ),
+    ] = False,
 ) -> None:
     """Show the recorded status, provenance and artifacts of a run."""
 
     def action() -> tuple[RunRecord, tuple[ArtifactRecord, ...]]:
-        record = default_run_store().get_run(parse_id(RunId, run_id))
-        return record, default_artifact_store().list_artifacts(record.id)
+        store = default_run_store()
+        artifacts = default_artifact_store()
+        record = store.get_run(parse_id(RunId, run_id))
+        if not no_refresh and not record.is_terminal and record.external_job_id:
+            outcome = refresh_run(
+                record,
+                backend=execution_backend(record.backend),
+                store=store,
+                artifacts=artifacts,
+                audit=default_audit_log(),
+                home=lab_home(),
+                actor=actor(),
+                policy=default_policy(),
+            )
+            record = outcome.run
+        return record, artifacts.list_artifacts(record.id)
 
     record, artifacts = run_or_fail(json_output, action)
     emit(

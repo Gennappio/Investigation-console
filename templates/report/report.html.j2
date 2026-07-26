@@ -70,6 +70,8 @@
   <h2>4 · Data provenance</h2>
   <dl class="grid">
     <dt>Configuration hash</dt><dd class="mono">{{ run.configuration_hash }}</dd>
+    <dt>Execution backend</dt><dd class="mono">{{ run.backend }}</dd>
+    <dt>Scheduler job</dt><dd class="mono">{{ run.external_job_id or "—" }}</dd>
     <dt>Created</dt><dd>{{ run.created_at }}</dd>
     <dt>Started</dt><dd>{{ run.started_at or "—" }}</dd>
     <dt>Completed</dt><dd>{{ run.completed_at or "—" }}</dd>

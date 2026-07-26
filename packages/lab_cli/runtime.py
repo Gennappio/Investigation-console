@@ -8,10 +8,16 @@ import sys
 from pathlib import Path
 
 from lab_artifacts.filesystem_store import FilesystemArtifactStore
+from lab_containers.apptainer_engine import ApptainerEngine
 from lab_containers.docker_engine import DockerEngine
 from lab_execution.local_backend import LocalExecutionBackend
+from lab_slurm.backend import SlurmExecutionBackend, SlurmOptions
+from lab_slurm.jobs import JobIndex
 
-from lab_domain.errors import StateStoreError
+from lab_domain.containers import ContainerEngine
+from lab_domain.errors import ExecutionFailedError, StateStoreError
+from lab_domain.execution import ExecutionBackend
+from lab_domain.policy import ResourcePolicy, load_policy
 from lab_registry.audit import AuditLog
 from lab_registry.local_store import LocalRegistry
 from lab_registry.run_store import FileRunStore
@@ -21,6 +27,9 @@ INSTALLED_TEMPLATES = Path("share") / "lab-platform" / "templates"
 PROJECT_TEMPLATE_MARKER = "lab.yaml.j2"
 ARTIFACTS_DIRECTORY = "artifacts"
 WORK_DIRECTORY = "work"
+LOCAL_BACKEND = "local"
+SLURM_BACKEND = "slurm"
+BACKENDS = (LOCAL_BACKEND, SLURM_BACKEND)
 
 
 def lab_home() -> Path:
@@ -58,12 +67,39 @@ def default_audit_log() -> AuditLog:
     return AuditLog(lab_home())
 
 
-def default_container_engine() -> DockerEngine:
-    return DockerEngine()
+def default_policy() -> ResourcePolicy:
+    return load_policy(lab_home())
 
 
-def default_execution_backend() -> LocalExecutionBackend:
-    return LocalExecutionBackend(engine=default_container_engine())
+def default_container_engine(backend: str = LOCAL_BACKEND) -> ContainerEngine:
+    """Docker builds and runs images locally; clusters run them with Apptainer."""
+    return ApptainerEngine() if backend == SLURM_BACKEND else DockerEngine()
+
+
+def slurm_options() -> SlurmOptions:
+    """Cluster submission options, from the environment."""
+    return SlurmOptions(
+        partition=os.environ.get("LAB_SLURM_PARTITION"),
+        account=os.environ.get("LAB_SLURM_ACCOUNT"),
+        qos=os.environ.get("LAB_SLURM_QOS"),
+        cluster=os.environ.get("LAB_SLURM_CLUSTER"),
+    )
+
+
+def execution_backend(name: str = LOCAL_BACKEND) -> ExecutionBackend:
+    """The backend a command asked for, wired to its container engine."""
+    if name == LOCAL_BACKEND:
+        return LocalExecutionBackend(engine=default_container_engine(LOCAL_BACKEND))
+    if name == SLURM_BACKEND:
+        return SlurmExecutionBackend(
+            template_dir=slurm_template_dir(),
+            index=JobIndex(lab_home()),
+            options=slurm_options(),
+            engine=default_container_engine(SLURM_BACKEND),
+        )
+    raise ExecutionFailedError(
+        f"Unknown backend {name!r}. Available: {', '.join(BACKENDS)}."
+    )
 
 
 def templates_root() -> Path:
@@ -104,3 +140,7 @@ def project_template_dir() -> Path:
 
 def report_template_dir() -> Path:
     return templates_root() / "report"
+
+
+def slurm_template_dir() -> Path:
+    return templates_root() / "slurm"

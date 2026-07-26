@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict
 
 from lab_domain.containers import ContainerRunSpec
 from lab_domain.ids import RunId
+from lab_domain.runs import ResourceRequest
 
 
 class ExecutionModel(BaseModel):
@@ -30,6 +31,12 @@ class RunRequest(ExecutionModel):
     working_directory: Path
     output_directory: Path
     log_directory: Path
+    # What to reserve. A scheduler needs this up front; a local backend uses
+    # only the wall-time limit.
+    resources: ResourceRequest
+    # Provenance for the generated job script: commit, digest, who submitted
+    # (AGENTS.md section 8.2). Values are recorded, never executed.
+    labels: dict[str, str] = {}
     timeout_seconds: int | None = None
     container: ContainerRunSpec | None = None
 
@@ -60,6 +67,9 @@ class CollectionResult(ExecutionModel):
     stderr_path: Path
     output_paths: tuple[Path, ...]
     exit_code: int | None
+    # Files the backend itself produced that describe the execution, such as a
+    # generated job script. They are provenance, so they outlive scratch.
+    provenance_paths: tuple[Path, ...] = ()
 
 
 class ExecutionBackend(Protocol):

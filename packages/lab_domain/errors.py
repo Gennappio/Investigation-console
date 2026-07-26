@@ -45,6 +45,12 @@ class DependencyError(LabError):
     code = "DEPENDENCY_UNAVAILABLE"
 
 
+class PolicyViolationError(LabError):
+    """A request exceeds a platform limit (AGENTS.md section 15.3)."""
+
+    code = "POLICY_VIOLATION"
+
+
 class BuildFailedError(LabError):
     """Building the container image failed."""
 

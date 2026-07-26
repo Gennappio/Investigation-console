@@ -13,8 +13,8 @@ from lab_cli.options import EXPERIMENT_OPTION, JSON_OPTION
 from lab_cli.output import emit, run_or_fail
 from lab_cli.runtime import (
     default_artifact_store,
-    default_execution_backend,
     default_run_store,
+    execution_backend,
     scratch_root,
 )
 from lab_domain.ids import ExperimentId
@@ -38,7 +38,7 @@ def test(
         return run_test_profile(
             context,
             profile,
-            backend=default_execution_backend(),
+            backend=execution_backend(),
             store=default_run_store(),
             artifacts=default_artifact_store(),
             scratch_root=scratch_root(),

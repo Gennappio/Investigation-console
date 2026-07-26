@@ -35,6 +35,7 @@ packages = [
     "packages/lab_containers",
     "packages/lab_execution",
     "packages/lab_reporting",
+    "packages/lab_slurm",
     "packages/lab_cli",
 ]
 

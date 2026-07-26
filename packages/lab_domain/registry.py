@@ -12,7 +12,14 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from lab_domain.ids import ArtifactId, ExperimentId, ProjectId, RunId
+from lab_domain.ids import (
+    ArtifactId,
+    ComponentId,
+    DecisionId,
+    ExperimentId,
+    ProjectId,
+    RunId,
+)
 
 
 class ProjectRecord(BaseModel):
@@ -36,6 +43,10 @@ class IdAllocator(Protocol):
     def allocate_run_id(self) -> RunId: ...
 
     def allocate_artifact_id(self) -> ArtifactId: ...
+
+    def allocate_component_id(self) -> ComponentId: ...
+
+    def allocate_decision_id(self) -> DecisionId: ...
 
 
 class ProjectRegistry(Protocol):

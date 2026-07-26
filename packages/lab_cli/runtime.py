@@ -22,6 +22,7 @@ from lab_domain.execution import ExecutionBackend
 from lab_domain.language import LanguageModel
 from lab_domain.policy import ResourcePolicy, load_policy
 from lab_registry.audit import AuditLog
+from lab_registry.component_store import FileComponentStore
 from lab_registry.local_store import LocalRegistry
 from lab_registry.run_store import FileRunStore
 
@@ -64,6 +65,10 @@ def default_run_store() -> FileRunStore:
 
 def default_artifact_store() -> FilesystemArtifactStore:
     return FilesystemArtifactStore(artifacts_root(), default_registry())
+
+
+def default_component_store() -> FileComponentStore:
+    return FileComponentStore(lab_home(), default_registry())
 
 
 def default_audit_log() -> AuditLog:
@@ -130,9 +135,12 @@ def templates_root() -> Path:
             )
         return directory
 
+    # The source tree comes first and only exists in a checkout, so a developer
+    # editing a template sees the edit without reinstalling; an installed wheel
+    # has no source tree and falls through to the packaged copy.
     candidates = [
-        Path(sys.prefix) / INSTALLED_TEMPLATES,
         Path(__file__).resolve().parents[2] / "templates",
+        Path(sys.prefix) / INSTALLED_TEMPLATES,
     ]
     for candidate in candidates:
         if (candidate / "project" / PROJECT_TEMPLATE_MARKER).is_file():

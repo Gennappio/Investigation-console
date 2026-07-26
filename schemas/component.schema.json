@@ -1,0 +1,202 @@
+{
+  "$defs": {
+    "ComponentMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "keywords": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Keywords",
+          "type": "array"
+        },
+        "maintainer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maintainer"
+        },
+        "name": {
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ComponentMetadata",
+      "type": "object"
+    },
+    "ComponentSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Command",
+          "type": "array"
+        },
+        "container": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContainerSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "inputs": {
+          "additionalProperties": {
+            "$ref": "#/$defs/PortSpec"
+          },
+          "default": {},
+          "title": "Inputs",
+          "type": "object"
+        },
+        "outputs": {
+          "additionalProperties": {
+            "$ref": "#/$defs/PortSpec"
+          },
+          "default": {},
+          "title": "Outputs",
+          "type": "object"
+        },
+        "references": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "References",
+          "type": "array"
+        },
+        "tests": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "propertyNames": {
+            "enum": [
+              "software_tests",
+              "integration_tests",
+              "reproducibility_tests",
+              "scientific_validation"
+            ]
+          },
+          "title": "Tests",
+          "type": "object"
+        },
+        "version": {
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "command"
+      ],
+      "title": "ComponentSpec",
+      "type": "object"
+    },
+    "ContainerSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "default": ".",
+          "title": "Context",
+          "type": "string"
+        },
+        "dockerfile": {
+          "title": "Dockerfile",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dockerfile"
+      ],
+      "title": "ContainerSpec",
+      "type": "object"
+    },
+    "PortSpec": {
+      "additionalProperties": false,
+      "description": "One input or output of a component.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "PortSpec",
+      "type": "object"
+    }
+  },
+  "$id": "component.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A reusable executable asset, declared in ``components/*.yaml``.",
+  "properties": {
+    "apiVersion": {
+      "const": "lab/v1",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "const": "Component",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/ComponentMetadata"
+    },
+    "spec": {
+      "$ref": "#/$defs/ComponentSpec"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "ComponentManifest",
+  "type": "object"
+}

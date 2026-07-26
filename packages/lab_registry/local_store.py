@@ -12,7 +12,15 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from lab_domain.errors import StateStoreError
-from lab_domain.ids import ArtifactId, ExperimentId, ProjectId, RunId, TypedId
+from lab_domain.ids import (
+    ArtifactId,
+    ComponentId,
+    DecisionId,
+    ExperimentId,
+    ProjectId,
+    RunId,
+    TypedId,
+)
 from lab_domain.registry import ProjectRecord
 from lab_registry.files import write_atomically
 
@@ -50,6 +58,12 @@ class LocalRegistry:
 
     def allocate_artifact_id(self) -> ArtifactId:
         return self._allocate(ArtifactId)
+
+    def allocate_component_id(self) -> ComponentId:
+        return self._allocate(ComponentId)
+
+    def allocate_decision_id(self) -> DecisionId:
+        return self._allocate(DecisionId)
 
     def register_project(self, record: ProjectRecord) -> None:
         state = self._read()

@@ -8,6 +8,7 @@ from lab_domain.errors import WorkspaceNotFoundError
 
 MANIFEST_NAME = "lab.yaml"
 EXPERIMENTS_DIRECTORY = "experiments"
+COMPONENTS_DIRECTORY = "components"
 
 
 def find_workspace_root(start: Path) -> Path:
@@ -25,7 +26,15 @@ def find_workspace_root(start: Path) -> Path:
 
 def experiment_manifest_paths(root: Path) -> list[Path]:
     """Experiment manifests of a workspace, in a stable order."""
-    directory = root / EXPERIMENTS_DIRECTORY
+    return _manifest_paths(root / EXPERIMENTS_DIRECTORY)
+
+
+def component_manifest_paths(root: Path) -> list[Path]:
+    """Component manifests of a workspace, in a stable order."""
+    return _manifest_paths(root / COMPONENTS_DIRECTORY)
+
+
+def _manifest_paths(directory: Path) -> list[Path]:
     if not directory.is_dir():
         return []
     return sorted(

@@ -22,6 +22,14 @@ from lab_domain.manifests.quantities import parse_memory_to_mb, validate_time_li
 
 API_VERSION = "lab/v1"
 
+# The four test categories of AGENTS.md section 10, as manifest keys.
+SuiteName = Literal[
+    "software_tests",
+    "integration_tests",
+    "reproducibility_tests",
+    "scientific_validation",
+]
+
 
 class ManifestModel(BaseModel):
     """Common configuration for every manifest node."""
@@ -78,6 +86,41 @@ class RepositoryManifest(ManifestModel):
     kind: Literal["Repository"]
     metadata: RepositoryMetadata
     spec: RepositorySpec
+
+
+class ComponentMetadata(ManifestModel):
+    name: Annotated[str, Field(pattern=r"^[a-z0-9][a-z0-9-]*$")]
+    description: str | None = None
+    maintainer: str | None = None
+    keywords: tuple[str, ...] = ()
+
+
+class PortSpec(ManifestModel):
+    """One input or output of a component."""
+
+    type: str
+    description: str | None = None
+
+
+class ComponentSpec(ManifestModel):
+    # Semantic versioning: a registry entry is addressed by name and version.
+    version: Annotated[str, Field(pattern=r"^\d+\.\d+\.\d+$")]
+    command: Annotated[tuple[str, ...], Field(min_length=1)]
+    inputs: dict[str, PortSpec] = {}
+    outputs: dict[str, PortSpec] = {}
+    container: ContainerSpec | None = None
+    # Which command profile proves each test category (AGENTS.md section 10).
+    tests: dict[SuiteName, str] = {}
+    references: tuple[str, ...] = ()
+
+
+class ComponentManifest(ManifestModel):
+    """A reusable executable asset, declared in ``components/*.yaml``."""
+
+    api_version: Literal["lab/v1"] = Field(alias="apiVersion")
+    kind: Literal["Component"]
+    metadata: ComponentMetadata
+    spec: ComponentSpec
 
 
 class ExperimentMetadata(ManifestModel):

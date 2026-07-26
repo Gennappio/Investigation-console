@@ -10,8 +10,11 @@ from lab_cli.commands import (
     explain,
     init,
     inspect,
+    promote,
+    publish,
     report,
     run,
+    search,
     status,
     test,
     validate,
@@ -34,3 +37,6 @@ app.command("status")(status.status)
 app.command("cancel")(cancel.cancel)
 app.command("report")(report.report)
 app.command("explain")(explain.explain)
+app.command("publish")(publish.publish)
+app.command("search")(search.search)
+app.command("promote")(promote.promote)

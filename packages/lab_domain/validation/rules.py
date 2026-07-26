@@ -11,7 +11,11 @@ import re
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field
 
-from lab_domain.manifests.models import ExperimentManifest, RepositoryManifest
+from lab_domain.manifests.models import (
+    ComponentManifest,
+    ExperimentManifest,
+    RepositoryManifest,
+)
 from lab_domain.validation.findings import Finding, FindingCode, error, warning
 
 LAB_MANIFEST = "lab.yaml"
@@ -39,11 +43,20 @@ class ManifestDoc:
 
 
 @dataclass(frozen=True)
+class ComponentDoc:
+    """One parsed component manifest and the file it came from."""
+
+    file: str
+    manifest: ComponentManifest
+
+
+@dataclass(frozen=True)
 class WorkspaceDocs:
     """Everything the rules need about a workspace."""
 
     repository: RepositoryManifest | None = None
     experiments: tuple[ManifestDoc, ...] = ()
+    components: tuple[ComponentDoc, ...] = ()
     raw_texts: dict[str, str] = field(default_factory=dict)
 
 
@@ -171,7 +184,46 @@ def rule_no_secrets(docs: WorkspaceDocs) -> Iterator[Finding]:
                 )
 
 
+def rule_component_test_profiles(docs: WorkspaceDocs) -> Iterator[Finding]:
+    """A component may only cite test profiles the repository defines."""
+    if docs.repository is None:
+        return
+    available = set(docs.repository.spec.commands)
+    for doc in docs.components:
+        for suite, profile in sorted(doc.manifest.spec.tests.items()):
+            if profile not in available:
+                known = ", ".join(sorted(available)) or "none"
+                yield error(
+                    FindingCode.UNKNOWN_TEST_PROFILE,
+                    f"spec.tests.{suite}",
+                    f"Command profile {profile!r} is not defined in lab.yaml. "
+                    f"Available: {known}.",
+                    doc.file,
+                )
+
+
+def rule_component_project(docs: WorkspaceDocs) -> Iterator[Finding]:
+    """Components without a maintainer cannot be reviewed by anyone."""
+    for doc in docs.components:
+        if doc.manifest.metadata.maintainer is None:
+            yield warning(
+                FindingCode.MISSING_MAINTAINER,
+                "metadata.maintainer",
+                "Component has no maintainer.",
+                doc.file,
+            )
+        if not doc.manifest.spec.references:
+            yield warning(
+                FindingCode.MISSING_REFERENCES,
+                "spec.references",
+                "Component cites no literature references.",
+                doc.file,
+            )
+
+
 ALL_RULES: tuple[Rule, ...] = (
+    rule_component_test_profiles,
+    rule_component_project,
     rule_output_location,
     rule_maintainer,
     rule_dataset_versions,

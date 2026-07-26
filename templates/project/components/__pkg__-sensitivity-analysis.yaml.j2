@@ -1,0 +1,46 @@
+apiVersion: lab/v1
+kind: Component
+
+metadata:
+  name: {{ name }}-sensitivity-analysis
+  description: >-
+    Sensitivity analysis of the demo model: how much each parameter moves the
+    reported score. Replace with what this component actually computes.
+  maintainer: {{ owner }}
+  keywords:
+    - sensitivity
+    - analysis
+    - demo
+
+spec:
+  version: 0.1.0
+
+  command:
+    - python
+    - -m
+    - {{ package }}.run
+    - --config
+    - "${LAB_EXPERIMENT_CONFIG}"
+
+  inputs:
+    repetitions:
+      type: integer
+      description: How many times to repeat the sweep.
+    seed:
+      type: integer
+      description: Random seed, recorded with the run.
+
+  outputs:
+    metrics.json:
+      type: file
+      description: Metrics the platform reads into the run report.
+
+  # Which command profile from lab.yaml proves each test category. The
+  # maturity of this component is derived from what these actually recorded:
+  # run `lab test --profile smoke` before publishing.
+  tests:
+    software_tests: test
+    integration_tests: smoke
+
+  references:
+    - doi:10.0000/replace-me

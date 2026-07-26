@@ -31,6 +31,7 @@ def test_scaffold_contains_the_expected_files(tmp_path: Path) -> None:
     assert present == {
         ".gitignore",
         "README.md",
+        "components/demo-sensitivity-analysis.yaml",
         "configs/smoke.yaml",
         "containers/Dockerfile",
         "experiments/EXP-000001.yaml",

@@ -1,6 +1,13 @@
 """Application services. The CLI and the future API both call these."""
 
 from lab_domain.services.build_service import BuildSummary, build_image, image_tag
+from lab_domain.services.component_service import (
+    PublishResult,
+    SearchHit,
+    promote_component,
+    publish_component,
+    search_components,
+)
 from lab_domain.services.explain_service import Explanation, explain_run
 from lab_domain.services.init_service import InitResult, init_project
 from lab_domain.services.inspect_service import (
@@ -34,6 +41,8 @@ __all__ = [
     "BuildSummary",
     "ExperimentSummary",
     "Explanation",
+    "PublishResult",
+    "SearchHit",
     "InitResult",
     "ReportBundle",
     "ReportDocument",
@@ -50,9 +59,12 @@ __all__ = [
     "init_project",
     "inspect_workspace",
     "load_validated_workspace",
+    "promote_component",
+    "publish_component",
     "refresh_run",
     "run_test_profile",
     "scratch_directory",
+    "search_components",
     "start_run",
     "suite_for_profile",
     "wait_for_run",

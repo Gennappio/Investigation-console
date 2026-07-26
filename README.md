@@ -9,9 +9,10 @@ what exists today and how to work on it.
 
 ## Status
 
-**Milestones 1, 2 and 3 are complete.** A researcher can scaffold a repository,
+**Milestones 1 to 4 are complete.** A researcher can scaffold a repository,
 validate it, build its container, run its tests, execute the experiment locally
-or on SLURM, and get a structured report of what happened.
+or on SLURM, get a structured report of what happened, and publish the result
+as a reusable component that others can find.
 
 | Command | Purpose |
 |---|---|
@@ -24,11 +25,14 @@ or on SLURM, and get a structured report of what happened.
 | `lab status <RUN-id>` | Show what is recorded about a run, and collect it if it has ended |
 | `lab cancel <RUN-id>` | Stop a queued or running job |
 | `lab report <RUN-id>` | Write the report bundle for a finished run |
+| `lab publish component` | Register a component with the evidence behind it |
+| `lab search components "..."` | Find registered components |
+| `lab promote <CMP-id>` | Record a review that grants `validated` or `lab_standard` |
 | `lab explain <RUN-id>` | Optional: a generated summary of a finished run |
 
-`lab publish` and `lab search` (the component registry) arrive with later
-milestones. There is no operational database and no HTTP API yet: state lives
-under `LAB_HOME` (see `docs/adr/0005`).
+Obsidian projection (Milestone 5) and the API and agent client (Milestone 6)
+are still to come. There is no operational database and no HTTP API yet: state
+lives under `LAB_HOME` (see `docs/adr/0005`).
 
 ## Setup
 
@@ -167,6 +171,53 @@ content is data, never code. Outputs are checksummed into permanent storage,
 and a run is marked completed only once they are safely stored. If the output
 directory contains `metrics.json`, its contents become the report's metrics.
 
+## The component registry
+
+A component is a reusable executable asset, declared in `components/<name>.yaml`
+and published into the laboratory registry:
+
+```console
+$ lab test --profile smoke && lab test --profile test
+$ lab publish component
+Published demo-sensitivity-analysis 0.1.0 as CMP-000001
+  maturity:   tested
+  maintainer: anna.rossi
+  evidence:
+    integration_tests      passed (profile smoke)
+    software_tests         passed (profile test)
+  to advance: reproducibility_tests must pass
+
+$ lab search components "sensitivity analysis"
+1 component(s):
+  CMP-000001  demo-sensitivity-analysis 0.1.0  [tested]
+      Sensitivity analysis of the demo model...
+      evidence: integration_tests=passed, software_tests=passed
+```
+
+**Maturity is not something a component claims about itself** (ADR 0009). Up to
+`reproducible` the platform computes it from test results it recorded:
+`runnable` needs integration tests passing, `tested` adds software tests,
+`reproducible` adds reproducibility tests. The manifest says which command
+profile proves each category; `lab publish` reads the latest result for each and
+reports what is still missing for the next level.
+
+`validated` and `lab_standard` cannot be earned by any number of passing tests
+— they are granted by a person:
+
+```bash
+lab promote CMP-000001 --to validated --reviewer pi.rossi \
+  --note "Recovered the published sensitivity ranking on the reference dataset."
+```
+
+That writes a decision record (`DEC-…`) and an audit entry, and the review
+survives republishing, so a routine `lab publish` cannot quietly undo it.
+Trying to promote to an evidenced level is refused: those are not a matter of
+opinion. A published version is immutable — republishing the same version with
+different content exits 12 and asks for a new version instead.
+
+For a principal investigator, `lab search components --status tested --json`
+is the list of components awaiting review.
+
 ## Optional: generated summaries
 
 The platform needs no language model. Nothing in validation, building, testing,
@@ -239,7 +290,7 @@ Exit codes follow AGENTS.md section 13.2:
 | 8 | Execution failed, or an unknown backend |
 | 9 | Artifact collection failed |
 | 11 | No such run |
-| 12 | Conflict: target exists, or an attempt to rewrite a recorded run |
+| 12 | Conflict: target exists, or an attempt to rewrite a recorded run or published version |
 
 Finding codes and artifact identifiers are stable, safe to branch on.
 
@@ -254,9 +305,10 @@ Finding codes and artifact identifiers are stable, safe to branch on.
 | `LAB_LLM_MODEL`, `LAB_LLM_BASE_URL` | unset | Model choice and endpoint for `lab explain` |
 
 `LAB_HOME` holds `registry.json` (identifier counters and projects),
-`runs/`, `tests/`, `artifacts/` (permanent storage), `work/` (scratch, safe to
-delete between runs), `slurm/` (job identifiers, so a later command can collect
-a cluster run), `policy.json` and `audit.jsonl` (append-only record of
+`runs/`, `tests/`, `artifacts/` (permanent storage), `components/` and
+`decisions/` (the registry and its reviews), `work/` (scratch, safe to delete
+between runs), `slurm/` (job identifiers, so a later command can collect a
+cluster run), `policy.json` and `audit.jsonl` (append-only record of
 significant actions).
 
 ## Repository layout
@@ -272,7 +324,7 @@ packages/lab_reporting   HTML report rendering
 packages/lab_llm         Optional language-model adapter (OpenRouter) and prompts
 packages/lab_cli         Typer CLI: parses input, calls services, reports
 schemas/                 JSON Schemas generated from the models (never edited by hand)
-templates/project/       What `lab init` renders
+templates/project/       What `lab init` renders, including an example component
 templates/report/        The report template
 docs/adr/                Architecture decision records
 tests/{unit,contract,integration,fixtures}

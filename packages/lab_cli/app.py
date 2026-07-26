@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typer
 
-from lab_cli.commands import init, inspect, validate
+from lab_cli.commands import build, init, inspect, report, run, status, test, validate
 
 app = typer.Typer(
     name="lab",
@@ -16,3 +16,8 @@ app = typer.Typer(
 app.command("init")(init.init)
 app.command("validate")(validate.validate)
 app.command("inspect")(inspect.inspect)
+app.command("build")(build.build)
+app.command("test")(test.test)
+app.command("run")(run.run)
+app.command("status")(status.status)
+app.command("report")(report.report)

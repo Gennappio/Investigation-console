@@ -49,3 +49,11 @@ def validate_time_limit(value: str) -> str:
             f"malformed time limit {value!r}: expected HH:MM:SS or D-HH:MM:SS"
         )
     return value
+
+
+def time_limit_to_seconds(value: str) -> int:
+    """Convert a ``[days-]HH:MM:SS`` wall-time limit to whole seconds."""
+    validate_time_limit(value)
+    days, _, clock = value.strip().rpartition("-")
+    hours, minutes, seconds = (int(part) for part in clock.split(":"))
+    return (int(days) if days else 0) * 86400 + hours * 3600 + minutes * 60 + seconds

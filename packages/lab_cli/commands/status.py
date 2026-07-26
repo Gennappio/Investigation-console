@@ -1,0 +1,73 @@
+"""`lab status`: what is recorded about a run."""
+
+from __future__ import annotations
+
+from typing import Annotated
+
+import typer
+
+from lab_cli.exit_codes import ExitCode
+from lab_cli.identifiers import parse_id
+from lab_cli.options import JSON_OPTION
+from lab_cli.output import emit, run_or_fail
+from lab_cli.runtime import default_artifact_store, default_run_store
+from lab_domain.artifacts import ArtifactRecord
+from lab_domain.ids import RunId
+from lab_domain.runs import RunRecord
+
+
+def status(
+    run_id: Annotated[str, typer.Argument(help="Run identifier, e.g. RUN-000001.")],
+    json_output: Annotated[bool, JSON_OPTION] = False,
+) -> None:
+    """Show the recorded status, provenance and artifacts of a run."""
+
+    def action() -> tuple[RunRecord, tuple[ArtifactRecord, ...]]:
+        record = default_run_store().get_run(parse_id(RunId, run_id))
+        return record, default_artifact_store().list_artifacts(record.id)
+
+    record, artifacts = run_or_fail(json_output, action)
+    emit(
+        {
+            **record.model_dump(mode="json"),
+            "artifacts": [
+                {
+                    "id": str(a.id),
+                    "kind": a.kind.value,
+                    "name": a.name,
+                    "checksum": a.checksum,
+                    "size_bytes": a.size_bytes,
+                    "uri": a.uri,
+                }
+                for a in artifacts
+            ],
+        },
+        _render(record, artifacts),
+        json_output,
+    )
+    raise typer.Exit(int(ExitCode.OK))
+
+
+def _render(record: RunRecord, artifacts: tuple[ArtifactRecord, ...]) -> str:
+    lines = [
+        f"{record.id}: {record.status.value}",
+        f"  experiment: {record.experiment_id}   project: {record.project_id}",
+        f"  backend:    {record.backend}   job: {record.external_job_id or '—'}",
+        f"  submitted:  {record.submitted_by} at {record.created_at}",
+        f"  started:    {record.started_at or '—'}",
+        f"  completed:  {record.completed_at or '—'}   exit code: {record.exit_code}",
+        f"  commit:     {record.code.commit or 'not under version control'}",
+        f"  container:  {record.container.digest or 'none: executed on the host'}",
+        f"  config:     {record.configuration_hash}",
+    ]
+    if artifacts:
+        lines.append(f"  artifacts ({len(artifacts)}):")
+        lines += [f"    {a.id}  {a.kind.value:<10} {a.name}" for a in artifacts]
+    else:
+        lines.append("  artifacts: none")
+    if record.deviations:
+        lines.append("  deviations:")
+        lines += [f"    - {deviation}" for deviation in record.deviations]
+    if record.failure_reason:
+        lines.append(f"  failure:    {record.failure_reason}")
+    return "\n".join(lines)

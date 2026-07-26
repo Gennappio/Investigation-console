@@ -17,12 +17,14 @@ from typing import Any
 from pydantic import BaseModel
 
 from lab_domain.manifests.models import ExperimentManifest, RepositoryManifest
+from lab_domain.runs import RunRecord
 
 JSON_SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
 
 EXPORTS: tuple[tuple[str, type[BaseModel]], ...] = (
     ("lab.schema.json", RepositoryManifest),
     ("experiment.schema.json", ExperimentManifest),
+    ("run.schema.json", RunRecord),
 )
 
 

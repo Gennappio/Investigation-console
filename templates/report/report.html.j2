@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ run.id }} — {{ report.experiment.title }}</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #16191d; --muted: #5b6470; --line: #d8dde3; --bg: #ffffff;
+    --panel: #f6f7f9; --accent: #1f5f8b; --ok: #1c7c4a; --bad: #a32b2b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink: #e7eaee; --muted: #9aa4b1; --line: #333a44; --bg: #14171b;
+            --panel: #1c2026; --accent: #7fb2d6; --ok: #6fcf97; --bad: #e08585; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 2rem 1.25rem 4rem; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 60rem; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h2 { font-size: 1.05rem; margin: 2.25rem 0 .6rem; padding-bottom: .3rem;
+       border-bottom: 1px solid var(--line); letter-spacing: .01em; }
+  .sub { color: var(--muted); margin: 0 0 1.5rem; }
+  .badge { display: inline-block; padding: .15rem .55rem; border-radius: 999px;
+           font-size: .78rem; font-weight: 600; border: 1px solid var(--line); }
+  .badge.completed { color: var(--ok); border-color: var(--ok); }
+  .badge.failed, .badge.cancelled { color: var(--bad); border-color: var(--bad); }
+  dl.grid { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr; gap: .4rem 1rem; margin: 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; overflow-wrap: anywhere; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line);
+           vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+           padding: .8rem 1rem; }
+  ul { margin: .3rem 0; padding-left: 1.2rem; }
+  .empty { color: var(--muted); font-style: italic; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .82rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>{{ run.id }} — {{ report.experiment.title }}</h1>
+  <p class="sub">
+    <span class="badge {{ run.status.value }}">{{ run.status.value }}</span>
+    experiment {{ report.experiment.id }} · project {{ run.project_id }} ·
+    backend {{ run.backend }} · submitted by {{ run.submitted_by }}
+  </p>
+
+  <h2>1 · Scientific question</h2>
+  <p>{{ report.experiment.question }}</p>
+
+  <h2>2 · Hypothesis</h2>
+  <p>{{ report.experiment.hypothesis }}</p>
+
+  <h2>3 · Input datasets</h2>
+  {% if report.datasets %}
+  <div class="scroll"><table>
+    <tr><th>Dataset</th><th>Version</th></tr>
+    {% for dataset in report.datasets %}
+    <tr><td class="mono">{{ dataset.id }}</td><td>{{ dataset.version or "unversioned" }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="empty">This run declared no input datasets.</p>{% endif %}
+
+  <h2>4 · Data provenance</h2>
+  <dl class="grid">
+    <dt>Configuration hash</dt><dd class="mono">{{ run.configuration_hash }}</dd>
+    <dt>Created</dt><dd>{{ run.created_at }}</dd>
+    <dt>Started</dt><dd>{{ run.started_at or "—" }}</dd>
+    <dt>Completed</dt><dd>{{ run.completed_at or "—" }}</dd>
+  </dl>
+
+  <h2>5 · Code revision</h2>
+  <dl class="grid">
+    <dt>Repository</dt><dd class="mono">{{ report.code.repository or "not recorded" }}</dd>
+    <dt>Commit</dt><dd class="mono">{{ report.code.commit or "not under version control" }}</dd>
+    <dt>Uncommitted changes</dt><dd>{{ "yes" if report.code.dirty else "no" }}</dd>
+  </dl>
+
+  <h2>6 · Container</h2>
+  <dl class="grid">
+    <dt>Image</dt><dd class="mono">{{ report.container.image or "none: executed on the host" }}</dd>
+    <dt>Digest</dt><dd class="mono">{{ report.container.digest or "—" }}</dd>
+  </dl>
+
+  <h2>7 · Parameters and seeds</h2>
+  {% if report.parameters %}
+  <dl class="grid">
+    {% for name, value in report.parameters.items() %}
+    <dt class="mono">{{ name }}</dt><dd class="mono">{{ value }}</dd>
+    {% endfor %}
+  </dl>
+  {% else %}<p class="empty">No parameters were declared.</p>{% endif %}
+  <p>Seeds: <span class="mono">{{ report.seeds | join(", ") if report.seeds else "none declared" }}</span></p>
+
+  <h2>8 · Resource usage</h2>
+  <dl class="grid">
+    <dt>Requested CPUs</dt><dd>{{ report.resource_usage.requested_cpus }}</dd>
+    <dt>Requested memory</dt><dd>{{ report.resource_usage.requested_memory_mb }} MB</dd>
+    <dt>Requested GPUs</dt><dd>{{ report.resource_usage.requested_gpus }}</dd>
+    <dt>Wall-time limit</dt><dd>{{ report.resource_usage.time_limit or "none" }}</dd>
+    <dt>Wall time used</dt>
+    <dd>{% if report.resource_usage.wall_time_seconds is not none %}
+        {{ "%.2f"|format(report.resource_usage.wall_time_seconds) }} s
+        {% else %}not measured{% endif %}</dd>
+  </dl>
+
+  <h2>9 · Test results</h2>
+  {% if report.test_results %}
+  <div class="scroll"><table>
+    <tr><th>Suite</th><th>Profile</th><th>Status</th><th>Exit code</th><th>Recorded</th></tr>
+    {% for result in report.test_results %}
+    <tr>
+      <td>{{ result.suite.value }}</td>
+      <td class="mono">{{ result.profile }}</td>
+      <td>{{ result.status.value }}</td>
+      <td class="mono">{{ result.exit_code }}</td>
+      <td>{{ result.completed_at }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  <p class="empty">Software correctness is not scientific validity: suites not
+     listed here were never run for this project.</p>
+  {% else %}
+  <p class="empty">No test evidence was recorded for this project before the run.</p>
+  {% endif %}
+
+  <h2>10 · Outputs</h2>
+  {% if report.outputs %}
+  <div class="scroll"><table>
+    <tr><th>Artifact</th><th>Name</th><th>Size</th><th>Checksum</th></tr>
+    {% for artifact in report.outputs %}
+    <tr>
+      <td class="mono">{{ artifact.id }}</td>
+      <td class="mono">{{ artifact.name }}</td>
+      <td>{{ artifact.size_bytes }} B</td>
+      <td class="mono">{{ artifact.checksum }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="empty">The run produced no output artifacts.</p>{% endif %}
+
+  <h2>11 · Main metrics</h2>
+  {% if report.metrics %}
+  <dl class="grid">
+    {% for name, value in report.metrics.items() %}
+    <dt class="mono">{{ name }}</dt><dd class="mono">{{ value }}</dd>
+    {% endfor %}
+  </dl>
+  {% else %}
+  <p class="empty">The run reported no metrics.json.</p>
+  {% endif %}
+
+  <h2>12 · Deviations from protocol</h2>
+  {% if report.deviations %}
+  <div class="panel"><ul>
+    {% for deviation in report.deviations %}<li>{{ deviation }}</li>{% endfor %}
+  </ul></div>
+  {% else %}<p class="empty">None recorded.</p>{% endif %}
+  {% if run.failure_reason %}
+  <div class="panel"><strong>Failure:</strong> {{ run.failure_reason }}</div>
+  {% endif %}
+
+  <h2>13 · Limitations</h2>
+  <p class="empty">{{ report.limitations or "Human-authored: add limitations in the
+     experiment note. The platform does not infer them." }}</p>
+
+  <h2>14 · Reproduction</h2>
+  <div class="panel mono">{{ report.reproduction_command }}</div>
+
+  <h2>15 · Literature references</h2>
+  {% if report.references %}
+  <ul>{% for reference in report.references %}<li class="mono">{{ reference }}</li>{% endfor %}</ul>
+  {% else %}<p class="empty">The experiment cites no references.</p>{% endif %}
+
+  <footer>
+    Generated by the lab platform at {{ report.generated_at }} from the run record.
+    Execution metadata is recorded, never inferred.
+  </footer>
+</main>
+</body>
+</html>

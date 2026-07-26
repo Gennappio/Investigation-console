@@ -9,10 +9,19 @@ from __future__ import annotations
 from enum import IntEnum
 
 from lab_domain.errors import (
+    BuildFailedError,
+    CollectionFailedError,
+    DependencyError,
+    ExecutionFailedError,
+    ImmutableRunError,
     InvalidNameError,
+    InvalidTransitionError,
     LabError,
+    ManifestInvalidError,
+    NotFoundError,
     StateStoreError,
     TargetExistsError,
+    TestsFailedError,
     WorkspaceNotFoundError,
 )
 
@@ -35,11 +44,20 @@ class ExitCode(IntEnum):
 
 _BY_ERROR: dict[type[LabError], ExitCode] = {
     # A missing or unreadable manifest is a manifest-level failure, so it shares
-    # the code of a failed validation. 11 is reserved for registry lookups.
+    # the code of a failed validation. 11 is reserved for record lookups.
     WorkspaceNotFoundError: ExitCode.VALIDATION_FAILED,
+    ManifestInvalidError: ExitCode.VALIDATION_FAILED,
     InvalidNameError: ExitCode.INVALID_INPUT,
     StateStoreError: ExitCode.ENVIRONMENT_ERROR,
+    DependencyError: ExitCode.ENVIRONMENT_ERROR,
+    BuildFailedError: ExitCode.BUILD_FAILED,
+    TestsFailedError: ExitCode.TESTS_FAILED,
+    ExecutionFailedError: ExitCode.EXECUTION_FAILED,
+    CollectionFailedError: ExitCode.COLLECTION_FAILED,
+    NotFoundError: ExitCode.NOT_FOUND,
     TargetExistsError: ExitCode.CONFLICT,
+    ImmutableRunError: ExitCode.CONFLICT,
+    InvalidTransitionError: ExitCode.CONFLICT,
 }
 
 

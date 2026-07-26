@@ -6,16 +6,15 @@ atomically. This is the Milestone 1 stand-in for the operational database.
 
 from __future__ import annotations
 
-import os
-import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from lab_domain.errors import StateStoreError
-from lab_domain.ids import ExperimentId, ProjectId, TypedId
+from lab_domain.ids import ArtifactId, ExperimentId, ProjectId, RunId, TypedId
 from lab_domain.registry import ProjectRecord
+from lab_registry.files import write_atomically
 
 STATE_FILENAME = "registry.json"
 SCHEMA_VERSION = 1
@@ -46,6 +45,12 @@ class LocalRegistry:
     def allocate_experiment_id(self) -> ExperimentId:
         return self._allocate(ExperimentId)
 
+    def allocate_run_id(self) -> RunId:
+        return self._allocate(RunId)
+
+    def allocate_artifact_id(self) -> ArtifactId:
+        return self._allocate(ArtifactId)
+
     def register_project(self, record: ProjectRecord) -> None:
         state = self._read()
         state.projects.append(record)
@@ -53,6 +58,12 @@ class LocalRegistry:
 
     def list_projects(self) -> tuple[ProjectRecord, ...]:
         return tuple(self._read().projects)
+
+    def find_project(self, project_id: ProjectId) -> ProjectRecord | None:
+        for record in self._read().projects:
+            if record.id == project_id:
+                return record
+        return None
 
     def _allocate[IdT: TypedId](self, id_type: type[IdT]) -> IdT:
         state = self._read()
@@ -75,23 +86,7 @@ class LocalRegistry:
             ) from exc
 
     def _write(self, state: RegistryState) -> None:
-        payload = state.model_dump_json(indent=2) + "\n"
-        try:
-            self._home.mkdir(parents=True, exist_ok=True)
-            with tempfile.NamedTemporaryFile(
-                "w",
-                encoding="utf-8",
-                dir=self._home,
-                prefix=f".{STATE_FILENAME}.",
-                delete=False,
-            ) as handle:
-                handle.write(payload)
-                temporary = Path(handle.name)
-            os.replace(temporary, self._state_path)
-        except OSError as exc:
-            raise StateStoreError(
-                f"Cannot write platform state to {self._state_path}: {exc.strerror}."
-            ) from exc
+        write_atomically(self._state_path, state.model_dump_json(indent=2) + "\n")
 
 
 def utc_now() -> datetime:

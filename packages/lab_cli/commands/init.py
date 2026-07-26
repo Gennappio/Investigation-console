@@ -11,7 +11,7 @@ import typer
 from lab_cli.exit_codes import ExitCode
 from lab_cli.options import JSON_OPTION
 from lab_cli.output import emit, run_or_fail
-from lab_cli.runtime import default_registry, template_root
+from lab_cli.runtime import default_registry, project_template_dir
 from lab_domain.services import InitResult, init_project
 
 
@@ -26,7 +26,7 @@ def init(
             name=name,
             parent=Path.cwd(),
             registry=default_registry(),
-            template_dir=template_root(),
+            template_dir=project_template_dir(),
             owner=getpass.getuser(),
         )
 

@@ -59,5 +59,5 @@ def test_corrupt_state_is_reported(tmp_path: Path) -> None:
 def test_unwritable_home_is_reported(tmp_path: Path) -> None:
     blocked = tmp_path / "blocked"
     blocked.mkdir(mode=0o500)
-    with pytest.raises(StateStoreError, match="Cannot write platform state"):
+    with pytest.raises(StateStoreError, match="Cannot write"):
         LocalRegistry(blocked / "home").allocate_project_id()

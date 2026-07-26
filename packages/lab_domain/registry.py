@@ -12,7 +12,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from lab_domain.ids import ExperimentId, ProjectId
+from lab_domain.ids import ArtifactId, ExperimentId, ProjectId, RunId
 
 
 class ProjectRecord(BaseModel):
@@ -30,6 +30,14 @@ class ProjectRecord(BaseModel):
     created_at: datetime
 
 
+class IdAllocator(Protocol):
+    """Source of the next identifier of a kind, kept apart from any store."""
+
+    def allocate_run_id(self) -> RunId: ...
+
+    def allocate_artifact_id(self) -> ArtifactId: ...
+
+
 class ProjectRegistry(Protocol):
     def allocate_project_id(self) -> ProjectId: ...
 
@@ -38,3 +46,5 @@ class ProjectRegistry(Protocol):
     def register_project(self, record: ProjectRecord) -> None: ...
 
     def list_projects(self) -> tuple[ProjectRecord, ...]: ...
+
+    def find_project(self, project_id: ProjectId) -> ProjectRecord | None: ...

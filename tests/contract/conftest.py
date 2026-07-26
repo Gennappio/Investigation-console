@@ -10,7 +10,7 @@ from typer.testing import CliRunner, Result
 
 from lab_cli.app import app
 
-TEMPLATE_DIR = Path(__file__).resolve().parents[2] / "templates" / "project"
+TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "templates"
 
 Invoke = Callable[..., Result]
 
@@ -18,7 +18,7 @@ Invoke = Callable[..., Result]
 @pytest.fixture
 def invoke(tmp_path: Path, lab_home: Path, monkeypatch: pytest.MonkeyPatch) -> Invoke:
     """Run a `lab` command in an isolated directory and platform state."""
-    monkeypatch.setenv("LAB_TEMPLATES_DIR", str(TEMPLATE_DIR))
+    monkeypatch.setenv("LAB_TEMPLATES_DIR", str(TEMPLATES_DIR))
     runner = CliRunner()
 
     def run(*arguments: str, cwd: Path | None = None) -> Result:

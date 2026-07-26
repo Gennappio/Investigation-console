@@ -22,7 +22,7 @@ import pytest
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 PACKAGES = REPOSITORY_ROOT / "packages"
-TEMPLATES = REPOSITORY_ROOT / "templates" / "project"
+TEMPLATES = REPOSITORY_ROOT / "templates"
 
 Lab = Callable[..., "subprocess.CompletedProcess[str]"]
 

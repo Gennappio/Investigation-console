@@ -1,0 +1,313 @@
+{
+  "$defs": {
+    "CodeRef": {
+      "description": "Where the executed code came from.",
+      "properties": {
+        "commit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Commit"
+        },
+        "dirty": {
+          "default": false,
+          "title": "Dirty",
+          "type": "boolean"
+        },
+        "repository": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Repository"
+        }
+      },
+      "title": "CodeRef",
+      "type": "object"
+    },
+    "ContainerRef": {
+      "description": "The image a run executed in, pinned by digest where available.",
+      "properties": {
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Digest"
+        },
+        "image": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Image"
+        }
+      },
+      "title": "ContainerRef",
+      "type": "object"
+    },
+    "DatasetPin": {
+      "properties": {
+        "id": {
+          "pattern": "^DATA-[0-9]{6}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "title": "DatasetPin",
+      "type": "object"
+    },
+    "ResourceRequest": {
+      "properties": {
+        "cpus": {
+          "minimum": 1,
+          "title": "Cpus",
+          "type": "integer"
+        },
+        "gpus": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Gpus",
+          "type": "integer"
+        },
+        "memory_mb": {
+          "minimum": 1,
+          "title": "Memory Mb",
+          "type": "integer"
+        },
+        "time_limit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Time Limit"
+        }
+      },
+      "required": [
+        "cpus",
+        "memory_mb"
+      ],
+      "title": "ResourceRequest",
+      "type": "object"
+    },
+    "RunStatus": {
+      "enum": [
+        "created",
+        "validated",
+        "queued",
+        "running",
+        "completed",
+        "failed",
+        "cancelled"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    }
+  },
+  "$id": "run.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "artifacts": {
+      "default": [],
+      "items": {
+        "pattern": "^ART-[0-9]{6}$",
+        "type": "string"
+      },
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "backend": {
+      "title": "Backend",
+      "type": "string"
+    },
+    "code": {
+      "$ref": "#/$defs/CodeRef"
+    },
+    "command": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Command",
+      "type": "array"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completed At"
+    },
+    "configuration_hash": {
+      "title": "Configuration Hash",
+      "type": "string"
+    },
+    "container": {
+      "$ref": "#/$defs/ContainerRef"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "datasets": {
+      "items": {
+        "$ref": "#/$defs/DatasetPin"
+      },
+      "title": "Datasets",
+      "type": "array"
+    },
+    "deviations": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Deviations",
+      "type": "array"
+    },
+    "exit_code": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Exit Code"
+    },
+    "experiment_id": {
+      "pattern": "^EXP-[0-9]{6}$",
+      "title": "Experiment Id",
+      "type": "string"
+    },
+    "external_job_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "External Job Id"
+    },
+    "failure_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Failure Reason"
+    },
+    "id": {
+      "pattern": "^RUN-[0-9]{6}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "parameters": {
+      "additionalProperties": true,
+      "title": "Parameters",
+      "type": "object"
+    },
+    "project_id": {
+      "pattern": "^PRJ-[0-9]{6}$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "resources": {
+      "$ref": "#/$defs/ResourceRequest"
+    },
+    "seeds": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Seeds",
+      "type": "array"
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Started At"
+    },
+    "status": {
+      "$ref": "#/$defs/RunStatus"
+    },
+    "submitted_by": {
+      "title": "Submitted By",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "experiment_id",
+    "project_id",
+    "status",
+    "backend",
+    "code",
+    "container",
+    "datasets",
+    "configuration_hash",
+    "parameters",
+    "seeds",
+    "resources",
+    "command",
+    "submitted_by",
+    "created_at"
+  ],
+  "title": "RunRecord",
+  "type": "object"
+}

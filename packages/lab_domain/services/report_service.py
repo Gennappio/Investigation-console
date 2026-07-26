@@ -97,7 +97,7 @@ def generate_report(
         )
 
     existing = artifacts.list_artifacts(run_id)
-    document = _build_document(record, store, existing, artifacts)
+    document = build_document(record, store, existing, artifacts)
 
     scratch = scratch_root / str(run_id) / "report"
     scratch.mkdir(parents=True, exist_ok=True)
@@ -124,7 +124,7 @@ def generate_report(
     return ReportBundle(run_id=run_id, document=document, artifacts=tuple(stored))
 
 
-def _build_document(
+def build_document(
     record: RunRecord,
     store: RunStore,
     existing: tuple[ArtifactRecord, ...],

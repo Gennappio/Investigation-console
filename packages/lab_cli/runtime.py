@@ -11,12 +11,15 @@ from lab_artifacts.filesystem_store import FilesystemArtifactStore
 from lab_containers.apptainer_engine import ApptainerEngine
 from lab_containers.docker_engine import DockerEngine
 from lab_execution.local_backend import LocalExecutionBackend
+from lab_llm.config import load_settings
+from lab_llm.openrouter import OpenRouterModel
 from lab_slurm.backend import SlurmExecutionBackend, SlurmOptions
 from lab_slurm.jobs import JobIndex
 
 from lab_domain.containers import ContainerEngine
 from lab_domain.errors import ExecutionFailedError, StateStoreError
 from lab_domain.execution import ExecutionBackend
+from lab_domain.language import LanguageModel
 from lab_domain.policy import ResourcePolicy, load_policy
 from lab_registry.audit import AuditLog
 from lab_registry.local_store import LocalRegistry
@@ -69,6 +72,14 @@ def default_audit_log() -> AuditLog:
 
 def default_policy() -> ResourcePolicy:
     return load_policy(lab_home())
+
+
+def default_language_model(model: str | None = None) -> LanguageModel:
+    """The optional model. Unconfigured is a normal state, not an error."""
+    settings = load_settings(lab_home())
+    if model:
+        settings = settings.model_copy(update={"model": model})
+    return OpenRouterModel(settings)
 
 
 def default_container_engine(backend: str = LOCAL_BACKEND) -> ContainerEngine:
@@ -144,3 +155,7 @@ def report_template_dir() -> Path:
 
 def slurm_template_dir() -> Path:
     return templates_root() / "slurm"
+
+
+def prompt_template_dir() -> Path:
+    return templates_root() / "prompts"

@@ -1,6 +1,7 @@
 """Application services. The CLI and the future API both call these."""
 
 from lab_domain.services.build_service import BuildSummary, build_image, image_tag
+from lab_domain.services.explain_service import Explanation, explain_run
 from lab_domain.services.init_service import InitResult, init_project
 from lab_domain.services.inspect_service import (
     ExperimentSummary,
@@ -10,6 +11,7 @@ from lab_domain.services.inspect_service import (
 from lab_domain.services.report_service import (
     ReportBundle,
     ReportDocument,
+    build_document,
     generate_report,
 )
 from lab_domain.services.run_service import (
@@ -31,15 +33,18 @@ from lab_domain.services.workspace_context import (
 __all__ = [
     "BuildSummary",
     "ExperimentSummary",
+    "Explanation",
     "InitResult",
     "ReportBundle",
     "ReportDocument",
     "RunOutcome",
     "WorkspaceContext",
     "WorkspaceInfo",
+    "build_document",
     "build_image",
     "cancel_run",
     "execute_run",
+    "explain_run",
     "generate_report",
     "image_tag",
     "init_project",

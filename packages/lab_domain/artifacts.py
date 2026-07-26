@@ -23,6 +23,8 @@ class ArtifactKind(StrEnum):
     CHECKSUMS = "checksums"
     BUILD_LOG = "build_log"
     JOB_SCRIPT = "job_script"
+    # Generated text, never evidence (AGENTS.md section 11).
+    EXPLANATION = "explanation"
     TEST_RESULT = "test_result"
 
 

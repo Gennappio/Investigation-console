@@ -12,6 +12,26 @@ from lab_domain.runs import CodeRef, ContainerRef, ResourceRequest, RunRecord, R
 FIXTURE_MANIFESTS = Path(__file__).parent / "fixtures" / "manifests"
 
 
+@pytest.fixture(autouse=True)
+def no_outbound_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail loudly if a test tries to reach the network.
+
+    The language-model adapter is the only component that would, and it is
+    supposed to be driven through an injected transport. A test that reaches a
+    provider for real costs money and leaks whatever it was summarising.
+    """
+    import socket
+
+    def refuse(*arguments: object, **keywords: object) -> None:
+        raise AssertionError(
+            "A test attempted an outbound network connection. Inject a fake "
+            "transport instead."
+        )
+
+    monkeypatch.setattr(socket.socket, "connect", refuse)
+    monkeypatch.setattr(socket.socket, "connect_ex", refuse)
+
+
 @pytest.fixture
 def manifests() -> Path:
     """Directory holding the hand-written manifest fixtures."""

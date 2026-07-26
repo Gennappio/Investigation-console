@@ -7,6 +7,7 @@ import typer
 from lab_cli.commands import (
     build,
     cancel,
+    explain,
     init,
     inspect,
     report,
@@ -32,3 +33,4 @@ app.command("run")(run.run)
 app.command("status")(status.status)
 app.command("cancel")(cancel.cancel)
 app.command("report")(report.report)
+app.command("explain")(explain.explain)

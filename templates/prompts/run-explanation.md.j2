@@ -1,0 +1,56 @@
+A run of an experiment on a research execution platform has finished. Below is
+everything the platform recorded about it. Write a short plain-language summary
+for a colleague who has not seen this experiment.
+
+Rules:
+
+- Use only the facts below. If something is not stated, say it is not recorded.
+- Do not invent numbers, dates, identifiers, checksums or conclusions.
+- Do not claim the result is scientifically valid. Passing software tests is
+  not scientific validity, and this platform records the difference.
+- Mention any deviation from protocol plainly; they matter more than the
+  outputs.
+- Four short paragraphs at most: what was run, what came out, what to be
+  careful about, what a reader should check next.
+
+RUN {{ report.run.id }}
+
+Status            {{ report.run.status.value }}{% if report.run.exit_code is not none %} (exit code {{ report.run.exit_code }}){% endif %}
+
+Experiment        {{ report.experiment.id }} — {{ report.experiment.title }}
+Question          {{ report.experiment.question }}
+Hypothesis        {{ report.experiment.hypothesis }}
+
+Backend           {{ report.run.backend }}{% if report.run.external_job_id %} (scheduler job {{ report.run.external_job_id }}){% endif %}
+
+Code commit       {{ report.code.commit or "not under version control" }}
+Container digest  {{ report.container.digest or "none: executed on the host" }}
+Configuration     {{ report.run.configuration_hash }}
+
+Parameters        {% if report.parameters %}{{ report.parameters }}{% else %}none declared{% endif %}
+
+Seeds             {% if report.seeds %}{{ report.seeds | join(", ") }}{% else %}none declared{% endif %}
+
+Datasets          {% if report.datasets %}{% for dataset in report.datasets %}{{ dataset.id }}@{{ dataset.version or "unversioned" }} {% endfor %}{% else %}none declared{% endif %}
+
+Resources         {{ report.resource_usage.requested_cpus }} cpus, {{ report.resource_usage.requested_memory_mb }} MB, {{ report.resource_usage.requested_gpus }} gpus, limit {{ report.resource_usage.time_limit or "none" }}
+Wall time         {% if report.resource_usage.wall_time_seconds is not none %}{{ "%.2f" | format(report.resource_usage.wall_time_seconds) }} s{% else %}not measured{% endif %}
+
+Metrics reported by the run:
+{% if report.metrics %}{% for name, value in report.metrics.items() %}  {{ name }}: {{ value }}
+{% endfor %}{% else %}  none
+{% endif %}
+Test evidence recorded before this run:
+{% if report.test_results %}{% for result in report.test_results %}  {{ result.suite.value }} ({{ result.profile }}): {{ result.status.value }}
+{% endfor %}{% else %}  none
+{% endif %}
+Outputs:
+{% if report.outputs %}{% for artifact in report.outputs %}  {{ artifact.name }} ({{ artifact.size_bytes }} bytes)
+{% endfor %}{% else %}  none
+{% endif %}
+Deviations from protocol:
+{% if report.deviations %}{% for deviation in report.deviations %}  - {{ deviation }}
+{% endfor %}{% else %}  none recorded
+{% endif %}{% if report.run.failure_reason %}
+Failure           {{ report.run.failure_reason }}
+{% endif %}

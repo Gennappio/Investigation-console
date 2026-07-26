@@ -45,6 +45,12 @@ class DependencyError(LabError):
     code = "DEPENDENCY_UNAVAILABLE"
 
 
+class LanguageModelError(LabError):
+    """The optional language model is unconfigured or did not answer."""
+
+    code = "LANGUAGE_MODEL_UNAVAILABLE"
+
+
 class PolicyViolationError(LabError):
     """A request exceeds a platform limit (AGENTS.md section 15.3)."""
 

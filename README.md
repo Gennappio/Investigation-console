@@ -24,6 +24,7 @@ or on SLURM, and get a structured report of what happened.
 | `lab status <RUN-id>` | Show what is recorded about a run, and collect it if it has ended |
 | `lab cancel <RUN-id>` | Stop a queued or running job |
 | `lab report <RUN-id>` | Write the report bundle for a finished run |
+| `lab explain <RUN-id>` | Optional: a generated summary of a finished run |
 
 `lab publish` and `lab search` (the component registry) arrive with later
 milestones. There is no operational database and no HTTP API yet: state lives
@@ -166,6 +167,44 @@ content is data, never code. Outputs are checksummed into permanent storage,
 and a run is marked completed only once they are safely stored. If the output
 directory contains `metrics.json`, its contents become the report's metrics.
 
+## Optional: generated summaries
+
+The platform needs no language model. Nothing in validation, building, testing,
+execution, collection or reporting calls one, and with no key configured every
+command behaves exactly as documented above.
+
+`lab explain <RUN-id>` is the single exception. It sends the facts already in
+the run record to a model and stores the prose it gets back:
+
+```bash
+export OPENROUTER_API_KEY=sk-or-...        # the key lives in the environment, never in a file
+export LAB_LLM_MODEL=vendor/model-name     # choose one from https://openrouter.ai/models
+lab explain RUN-000001
+```
+
+Settings other than the key may live in `$LAB_HOME/llm.json`
+(`model`, `base_url`, `max_tokens`, `temperature`, `timeout_seconds`);
+environment variables win. There is deliberately **no default model**: which
+one to use has cost and data-handling consequences, so the platform asks.
+
+What it guarantees:
+
+- The summary is stored as its own artifact, `explanation.md`, marked as
+  generated and carrying the provider, the model that served the request and
+  the SHA-256 of the prompt. The run record and the report are untouched — no
+  factual field anywhere is produced by a model (AGENTS.md section 11).
+- The exact prompt is stored beside it as `explanation.prompt.txt`, and the
+  call is written to `audit.jsonl`, so what was sent to a third party is
+  auditable afterwards.
+- The prompt itself is a template in `templates/prompts/`, readable and
+  editable without touching code.
+- Without a key, the command exits 4 saying so. Nothing else changes.
+
+The reasoning, and what it deliberately does not do, is in `docs/adr/0008`.
+Note that dataset classifications (section 15.2) are not yet in the run record,
+so `lab explain` cannot refuse a run over restricted or clinical data; if you
+work with patient-derived data, read the stored prompt before enabling it.
+
 ## Machine-readable output
 
 Every command takes `--json` and writes exactly one JSON document to stdout.
@@ -211,6 +250,8 @@ Finding codes and artifact identifiers are stable, safe to branch on.
 | `LAB_HOME` | `~/.lab` | Platform state: identifiers, runs, artifacts, audit log |
 | `LAB_TEMPLATES_DIR` | installed templates | Override the templates directory |
 | `LAB_SLURM_PARTITION`, `LAB_SLURM_ACCOUNT`, `LAB_SLURM_QOS` | unset | Cluster submission options |
+| `OPENROUTER_API_KEY` | unset | Credential for `lab explain`; without it the command is simply unavailable |
+| `LAB_LLM_MODEL`, `LAB_LLM_BASE_URL` | unset | Model choice and endpoint for `lab explain` |
 
 `LAB_HOME` holds `registry.json` (identifier counters and projects),
 `runs/`, `tests/`, `artifacts/` (permanent storage), `work/` (scratch, safe to
@@ -228,6 +269,7 @@ packages/lab_containers  Docker engine behind the container port
 packages/lab_execution   Local execution backend, and running external commands
 packages/lab_slurm       SLURM backend: sbatch rendering, submission, polling
 packages/lab_reporting   HTML report rendering
+packages/lab_llm         Optional language-model adapter (OpenRouter) and prompts
 packages/lab_cli         Typer CLI: parses input, calls services, reports
 schemas/                 JSON Schemas generated from the models (never edited by hand)
 templates/project/       What `lab init` renders
@@ -258,7 +300,9 @@ schema contract test fails:
 uv run python -m lab_domain.schema_export schemas/
 ```
 
-Neither Docker nor a cluster is needed for the test suite. The container
+Neither Docker, a cluster nor an API key is needed for the test suite, and a
+session-wide fixture fails any test that opens a socket, so nothing reaches a
+provider by accident. The container
 engines are exercised through a fake that captures the argument lists, and
 `tests/integration/test_acceptance_m3.py` drives the real CLI against fake
 `sbatch`, `squeue`, `sacct` and `scancel` executables (`tests/fixtures/

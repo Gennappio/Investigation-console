@@ -460,13 +460,20 @@ Milestone 3 acceptance step.
 ### Troubleshooting
 
 If `lab` fails with `ModuleNotFoundError: No module named 'lab_cli'` on macOS,
-the editable install's `.pth` file carries the hidden file flag, which CPython's
-`site` module skips. Clear it:
+set `PYTHONPATH` and the problem goes away for good:
 
 ```bash
-chflags nohidden .venv/lib/python3.12/site-packages/*.pth
+export PYTHONPATH=/path/to/Investigation-console/packages
 ```
 
-uv writes the flag whenever it rebuilds the editable wheel, so this can recur
-after a packaging or dependency change; `link-mode` does not affect it. The test
-suite is unaffected: it imports from `packages/` directly.
+What happens without it: uv marks every file it writes with the macOS `hidden`
+flag, and CPython's `site` module skips hidden `.pth` files — so the editable
+install's path file is ignored and the packages become invisible. `chflags
+nohidden .venv/lib/python3.12/site-packages/*.pth` clears it, but only until
+the next re-sync, and `uv run` re-syncs the project on almost every invocation,
+so the failure comes straight back. `uv sync --no-editable` installs real
+directories that are immune, but the next `uv run` reverts it. Setting
+`PYTHONPATH` sidesteps the mechanism entirely and survives all of it.
+
+The test suite is unaffected either way: it adds `packages/` and `apps/` to the
+path itself.

@@ -9,11 +9,11 @@ what exists today and how to work on it.
 
 ## Status
 
-**Milestones 1 to 5 are complete.** A researcher can scaffold a repository,
+**All six milestones are complete.** A researcher can scaffold a repository,
 validate it, build its container, run its tests, execute the experiment locally
 or on SLURM, get a structured report of what happened, publish the result as a
-reusable component that others can find, and read it all back as linked notes
-in an Obsidian vault.
+reusable component that others can find, read it all back as linked notes in an
+Obsidian vault, and drive the whole thing from any coding agent.
 
 | Command | Purpose |
 |---|---|
@@ -255,6 +255,57 @@ generated notes are scanned for secrets before being written. Projection is off
 until a vault is configured, and a vault problem is reported without failing
 the run that produced the record.
 
+## Using it from an agent or a script
+
+The CLI's `--json` contract is the interface, documented in
+`docs/protocols/cli.md` and pinned by the tests in `tests/contract/`. The Python
+client and the MCP adapter are built on it and add no behaviour of their own
+(ADR 0011).
+
+```python
+from lab_api_client import LabClient, LabCommandError
+
+lab = LabClient(cwd="/path/to/repository")
+if not lab.validate()["valid"]:
+    ...
+outcome = lab.run(backend="local", no_container=True)
+print(outcome["run_id"], outcome["status"], outcome["deviations"])
+```
+
+A failing test suite and a failed run are returned rather than raised — both
+recorded everything they promised. Anything else raises `LabCommandError`
+carrying the stable exit code and error code.
+
+For an MCP-speaking agent:
+
+```bash
+uv sync --extra mcp
+uv run python -m lab_api_client.mcp_server --workspace .
+```
+
+Only read tools are offered by default (`lab_validate`, `lab_inspect`,
+`lab_status`, `lab_search_components`). `--allow-writes` adds the ones that
+execute things and spend compute. `docs/protocols/agents.md` has the Claude Code
+registration snippet and a block of instructions worth pasting into your agent's
+own configuration.
+
+## The HTTP API
+
+```bash
+uv sync --extra api
+uv run uvicorn api.main:app --app-dir apps
+```
+
+`/v1/runs`, `/v1/components`, `/v1/artifacts`, `/v1/projects`,
+`/v1/execution-backends`, plus `/v1/runs/{id}/report`. Responses carry stable
+`lab-*://` URIs and never filesystem paths.
+
+**The API is read-only, deliberately.** Submitting a run spends compute and
+publishing changes a laboratory's record, and the platform has no authorization
+model yet — an unauthenticated POST that executes a repository's commands is the
+wrong kind of convenient. The API reports; the CLI acts. Write endpoints arrive
+with authorization, and will record a person rather than a service.
+
 ## Optional: generated summaries
 
 The platform needs no language model. Nothing in validation, building, testing,
@@ -360,12 +411,15 @@ packages/lab_execution   Local execution backend, and running external commands
 packages/lab_slurm       SLURM backend: sbatch rendering, submission, polling
 packages/lab_reporting   HTML report rendering
 packages/lab_obsidian    Vault projection: note merge, templates, settings
+packages/lab_api_client  Python client, agent operations, MCP adapter
+apps/api                 Read-only HTTP API (optional extra)
 packages/lab_llm         Optional language-model adapter (OpenRouter) and prompts
 packages/lab_cli         Typer CLI: parses input, calls services, reports
 schemas/                 JSON Schemas generated from the models (never edited by hand)
 templates/project/       What `lab init` renders, including an example component
 templates/report/        The report template
 docs/adr/                Architecture decision records
+docs/protocols/          The CLI JSON contract and agent instructions
 tests/{unit,contract,integration,fixtures}
 ```
 
@@ -380,8 +434,9 @@ which is what lets the SLURM backend arrive without touching the domain.
 ```bash
 uv run ruff check .
 uv run ruff format --check .
-uv run mypy packages          # strict; becomes `mypy packages apps` when the API lands
-uv run pytest
+uv run mypy packages apps     # strict
+uv run pytest                              # extras-dependent tests skip if absent
+uv run --extra api --extra mcp pytest      # everything
 ```
 
 Regenerate the JSON Schemas after changing a manifest or run model, or the

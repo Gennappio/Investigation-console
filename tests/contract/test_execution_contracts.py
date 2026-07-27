@@ -86,6 +86,7 @@ def test_run_records_the_execution(
         "resources",
         "artifacts",
         "deviations",
+        "notes",
     }
     assert body["run_id"] == "RUN-000001"
     assert body["status"] == "completed"

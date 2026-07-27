@@ -9,10 +9,11 @@ what exists today and how to work on it.
 
 ## Status
 
-**Milestones 1 to 4 are complete.** A researcher can scaffold a repository,
+**Milestones 1 to 5 are complete.** A researcher can scaffold a repository,
 validate it, build its container, run its tests, execute the experiment locally
-or on SLURM, get a structured report of what happened, and publish the result
-as a reusable component that others can find.
+or on SLURM, get a structured report of what happened, publish the result as a
+reusable component that others can find, and read it all back as linked notes
+in an Obsidian vault.
 
 | Command | Purpose |
 |---|---|
@@ -28,10 +29,10 @@ as a reusable component that others can find.
 | `lab publish component` | Register a component with the evidence behind it |
 | `lab search components "..."` | Find registered components |
 | `lab promote <CMP-id>` | Record a review that grants `validated` or `lab_standard` |
+| `lab sync obsidian` | Project this repository into the Obsidian vault |
 | `lab explain <RUN-id>` | Optional: a generated summary of a finished run |
 
-Obsidian projection (Milestone 5) and the API and agent client (Milestone 6)
-are still to come. There is no operational database and no HTTP API yet: state
+The API and the agent client (Milestone 6) are still to come. There is no operational database and no HTTP API yet: state
 lives under `LAB_HOME` (see `docs/adr/0005`).
 
 ## Setup
@@ -218,6 +219,42 @@ different content exits 12 and asks for a new version instead.
 For a principal investigator, `lab search components --status tested --json`
 is the list of components awaiting review.
 
+## The Obsidian vault
+
+Point the platform at a vault and finishing a run writes the notes for it:
+
+```bash
+export LAB_OBSIDIAN_VAULT=~/lab-vault     # or `vault` in $LAB_HOME/obsidian.json
+lab run --backend local
+#   ... vault: 3 notes written
+```
+
+You get `Projects/PRJ-000001.md`, `Experiments/EXP-000001.md` and
+`Runs/RUN-000001.md`, cross-linked with `[[wikilinks]]`, with frontmatter
+carrying the run's status, backend, commit, container digest and stable URIs
+(`lab-report://RUN-000001`, `lab-run://RUN-000001/artifacts`). `lab sync
+obsidian` regenerates everything, which is how you backfill a vault configured
+after the fact.
+
+**Your writing is safe** (ADR 0010). Each note has two halves:
+
+```markdown
+<!-- BEGIN LAB MANAGED -->    the platform owns this, and rewrites it
+<!-- BEGIN HUMAN NOTES -->    you own this, and it is copied through untouched
+```
+
+Frontmatter keys the platform does not claim are preserved too. And if a note
+cannot be parsed with confidence — no frontmatter, duplicated markers, or a
+file you wrote by hand — the platform **does not touch it**. It writes the
+generated version beside it as `RUN-000001.lab-conflict.md` and says so. It
+never guesses which text is whose.
+
+The vault holds links, not contents: notes name artifacts and address them by
+URI, but no artifact contents, logs or filesystem paths are copied into it, and
+generated notes are scanned for secrets before being written. Projection is off
+until a vault is configured, and a vault problem is reported without failing
+the run that produced the record.
+
 ## Optional: generated summaries
 
 The platform needs no language model. Nothing in validation, building, testing,
@@ -301,6 +338,7 @@ Finding codes and artifact identifiers are stable, safe to branch on.
 | `LAB_HOME` | `~/.lab` | Platform state: identifiers, runs, artifacts, audit log |
 | `LAB_TEMPLATES_DIR` | installed templates | Override the templates directory |
 | `LAB_SLURM_PARTITION`, `LAB_SLURM_ACCOUNT`, `LAB_SLURM_QOS` | unset | Cluster submission options |
+| `LAB_OBSIDIAN_VAULT` | unset | Vault to project notes into; unset disables projection |
 | `OPENROUTER_API_KEY` | unset | Credential for `lab explain`; without it the command is simply unavailable |
 | `LAB_LLM_MODEL`, `LAB_LLM_BASE_URL` | unset | Model choice and endpoint for `lab explain` |
 
@@ -321,6 +359,7 @@ packages/lab_containers  Docker engine behind the container port
 packages/lab_execution   Local execution backend, and running external commands
 packages/lab_slurm       SLURM backend: sbatch rendering, submission, polling
 packages/lab_reporting   HTML report rendering
+packages/lab_obsidian    Vault projection: note merge, templates, settings
 packages/lab_llm         Optional language-model adapter (OpenRouter) and prompts
 packages/lab_cli         Typer CLI: parses input, calls services, reports
 schemas/                 JSON Schemas generated from the models (never edited by hand)

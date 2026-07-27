@@ -1,0 +1,39 @@
+## Execution summary
+
+- Status: {{ run.status.value }}{% if run.exit_code is not none %} (exit code {{ run.exit_code }}){% endif %}
+
+- Experiment: [[{{ run.experiment_id }}]]
+- Project: [[{{ run.project_id }}]]
+- Backend: {{ run.backend }}{% if run.external_job_id %} (job {{ run.external_job_id }}){% endif %}
+
+- Submitted by: {{ run.submitted_by }}
+- Duration: {{ duration }}
+- Resources: {{ run.resources.cpus }} cpus, {{ run.resources.memory_mb }} MB, {{ run.resources.gpus }} gpus
+- Report: [Open report]({{ report_uri }})
+
+## Provenance
+
+- Code commit: `{{ run.code.commit or "not under version control" }}`
+- Container digest: `{{ run.container.digest or "none: executed on the host" }}`
+- Configuration hash: `{{ run.configuration_hash }}`
+{% if run.seeds %}- Seeds: {{ run.seeds | join(", ") }}
+{% endif %}{% if run.datasets %}- Datasets: {% for dataset in run.datasets %}`{{ dataset.id }}@{{ dataset.version or "unversioned" }}`{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+## Outputs
+
+{% if artifacts %}{% for artifact in artifacts %}- `{{ artifact.name }}` — {{ artifact.id }} ({{ artifact.size_bytes }} bytes)
+{% endfor %}
+Artifacts: {{ artifacts_uri }}
+{% else %}The run produced no output artifacts.
+{% endif %}
+{% if run.deviations %}
+## Deviations from protocol
+
+{% for deviation in run.deviations %}- {{ deviation }}
+{% endfor %}{% endif %}{% if run.failure_reason %}
+## Failure
+
+{{ run.failure_reason }}
+{% endif %}
+Reproduce with `{{ reproduction_command }}`.

@@ -1,0 +1,46 @@
+## Question
+
+{{ experiment.scientific.question }}
+
+## Hypothesis
+
+{{ experiment.scientific.hypothesis }}
+
+## Design
+
+- Project: [[{{ experiment.metadata.project }}]]
+- Owner: {{ experiment.metadata.owner }}
+{% if experiment.execution.component %}- Component: [[{{ experiment.execution.component }}]]
+{% endif %}{% if experiment.execution.parameters %}- Parameters: {% for name, value in experiment.execution.parameters.items() %}`{{ name }}={{ value }}`{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}{% if experiment.execution.seeds %}- Seeds: {{ experiment.execution.seeds.strategy }}{% if experiment.execution.seeds.values %} ({{ experiment.execution.seeds.values | join(", ") }}){% endif %}
+
+{% endif %}{% if experiment.execution.dataset_refs %}- Datasets: {% for dataset in experiment.execution.dataset_refs %}`{{ dataset.id }}@{{ dataset.version or "unversioned" }}`{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}{% if experiment.execution.resources %}- Resources: {{ experiment.execution.resources.cpus }} cpus, {{ experiment.execution.resources.memory }}, limit {{ experiment.execution.resources.time_limit }}
+{% endif %}
+## Runs
+
+{% if runs %}| Run | Status | Finished | Exit |
+|---|---|---|---|
+{% for run in runs %}| [[{{ run.id }}]] | {{ run.status.value }} | {{ run.completed_at or "—" }} | {{ run.exit_code if run.exit_code is not none else "—" }} |
+{% endfor %}
+{% else %}No runs recorded yet.
+{% endif %}
+## Required evidence
+
+{% if experiment.validation %}| Suite | Required |
+|---|---|
+| software_tests | {{ experiment.validation.software_tests }} |
+| integration_tests | {{ experiment.validation.integration_tests }} |
+| reproducibility_tests | {{ experiment.validation.reproducibility_tests }} |
+| scientific_validation | {{ experiment.validation.scientific_validation }} |
+
+Passing software tests is not scientific validity.
+{% else %}The experiment does not state which suites are required.
+{% endif %}
+{% if experiment.scientific.references %}
+## References
+
+{% for reference in experiment.scientific.references %}- `{{ reference }}`
+{% endfor %}{% endif %}

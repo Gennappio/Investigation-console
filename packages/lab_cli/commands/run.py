@@ -11,6 +11,7 @@ from lab_cli.exit_codes import ExitCode
 from lab_cli.identifiers import parse_optional_id
 from lab_cli.options import EXPERIMENT_OPTION, JSON_OPTION
 from lab_cli.output import emit, run_or_fail
+from lab_cli.projection import describe, note_payload, project_after
 from lab_cli.runtime import (
     BACKENDS,
     LOCAL_BACKEND,
@@ -98,6 +99,7 @@ def run(
         else RunOutcome(run=result, artifacts=())
     )
     record = outcome.run
+    projected = project_after(record, Path.cwd())
     emit(
         {
             "run_id": str(record.id),
@@ -111,8 +113,9 @@ def run(
             "resources": record.resources.model_dump(mode="json"),
             "artifacts": [str(a.id) for a in outcome.artifacts],
             "deviations": list(record.deviations),
+            "notes": note_payload(projected),
         },
-        _render(outcome),
+        "\n".join([_render(outcome), *describe(projected)]),
         json_output,
     )
     raise typer.Exit(int(_exit_code(record)))

@@ -7,6 +7,7 @@ has ended, its outputs are collected into permanent storage.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -15,6 +16,7 @@ from lab_cli.exit_codes import ExitCode
 from lab_cli.identifiers import parse_id
 from lab_cli.options import JSON_OPTION
 from lab_cli.output import emit, run_or_fail
+from lab_cli.projection import describe, note_payload, project_after
 from lab_cli.runtime import (
     actor,
     default_artifact_store,
@@ -61,6 +63,7 @@ def status(
         return record, artifacts.list_artifacts(record.id)
 
     record, artifacts = run_or_fail(json_output, action)
+    projected = project_after(record, Path.cwd())
     emit(
         {
             **record.model_dump(mode="json"),
@@ -75,8 +78,9 @@ def status(
                 }
                 for a in artifacts
             ],
+            "notes": note_payload(projected),
         },
-        _render(record, artifacts),
+        "\n".join([_render(record, artifacts), *describe(projected)]),
         json_output,
     )
     raise typer.Exit(int(ExitCode.OK))

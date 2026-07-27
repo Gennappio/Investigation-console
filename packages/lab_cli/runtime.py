@@ -161,6 +161,10 @@ def report_template_dir() -> Path:
     return templates_root() / "report"
 
 
+def obsidian_template_dir() -> Path:
+    return templates_root() / "obsidian"
+
+
 def slurm_template_dir() -> Path:
     return templates_root() / "slurm"
 

@@ -157,31 +157,41 @@ def rule_scientific_validation(docs: WorkspaceDocs) -> Iterator[Finding]:
             )
 
 
-def rule_no_secrets(docs: WorkspaceDocs) -> Iterator[Finding]:
-    """Tripwire for credentials committed into a manifest (section 15.1).
+def find_secrets(text: str) -> tuple[int, ...]:
+    """Line numbers that look like a committed credential (section 15.1).
 
     Deliberately high-precision: known token shapes plus assignments to
     secret-looking keys. Environment placeholders such as ``${LAB_TOKEN}`` are
-    the supported way to reference a secret and are not reported.
+    the supported way to reference a secret and are not reported. Used by the
+    manifest validator and by the vault projection, which must never write a
+    secret into someone's notes.
     """
+    found = []
+    for number, line in enumerate(text.splitlines(), start=1):
+        if line.lstrip().startswith("#"):
+            continue
+        hit = any(pattern.search(line) for pattern in _SECRET_VALUE_PATTERNS)
+        if not hit:
+            match = _SECRET_KEY_PATTERN.match(line)
+            hit = match is not None and not _PLACEHOLDER_PATTERN.match(
+                match["value"].split("#", 1)[0].strip()
+            )
+        if hit:
+            found.append(number)
+    return tuple(found)
+
+
+def rule_no_secrets(docs: WorkspaceDocs) -> Iterator[Finding]:
+    """Tripwire for credentials committed into a manifest."""
     for file_label, text in sorted(docs.raw_texts.items()):
-        for number, line in enumerate(text.splitlines(), start=1):
-            if line.lstrip().startswith("#"):
-                continue
-            hit = any(pattern.search(line) for pattern in _SECRET_VALUE_PATTERNS)
-            if not hit:
-                match = _SECRET_KEY_PATTERN.match(line)
-                hit = match is not None and not _PLACEHOLDER_PATTERN.match(
-                    match["value"].split("#", 1)[0].strip()
-                )
-            if hit:
-                yield error(
-                    FindingCode.SECRET_DETECTED,
-                    f"line {number}",
-                    "Manifest appears to contain a secret. Reference secrets "
-                    "through environment variables instead.",
-                    file_label,
-                )
+        for number in find_secrets(text):
+            yield error(
+                FindingCode.SECRET_DETECTED,
+                f"line {number}",
+                "Manifest appears to contain a secret. Reference secrets "
+                "through environment variables instead.",
+                file_label,
+            )
 
 
 def rule_component_test_profiles(docs: WorkspaceDocs) -> Iterator[Finding]:

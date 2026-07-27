@@ -16,6 +16,7 @@ from lab_cli.commands import (
     run,
     search,
     status,
+    sync,
     test,
     validate,
 )
@@ -40,3 +41,4 @@ app.command("explain")(explain.explain)
 app.command("publish")(publish.publish)
 app.command("search")(search.search)
 app.command("promote")(promote.promote)
+app.command("sync")(sync.sync)

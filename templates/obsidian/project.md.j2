@@ -1,0 +1,27 @@
+## {{ repository.metadata.name }}
+
+{{ repository.metadata.description or "No description in lab.yaml." }}
+
+- Project: `{{ repository.spec.project }}` ({{ project_uri }})
+- Owners: {{ repository.metadata.owners | join(", ") or "none recorded" }}
+- Runtime: {{ repository.spec.runtime.type }} {{ repository.spec.runtime.version }}
+
+## Experiments
+
+{% if experiments %}{% for experiment in experiments %}- [[{{ experiment.metadata.id }}]] — {{ experiment.metadata.title }} ({{ experiment.metadata.owner }})
+{% endfor %}{% else %}No experiments declared in this repository.
+{% endif %}
+## Recent runs
+
+{% if runs %}| Run | Experiment | Status | Finished |
+|---|---|---|---|
+{% for run in runs %}| [[{{ run.id }}]] | [[{{ run.experiment_id }}]] | {{ run.status.value }} | {{ run.completed_at or "—" }} |
+{% endfor %}
+{% else %}No runs recorded yet.
+{% endif %}
+{% if components %}
+## Components
+
+{% for component in components %}- `{{ component.id }}` {{ component.name }} {{ component.version }} — **{{ component.status.value }}**{% if component.review %} (reviewed by {{ component.review.reviewer }}){% endif %}
+
+{% endfor %}{% endif %}

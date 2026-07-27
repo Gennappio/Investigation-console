@@ -459,21 +459,34 @@ Milestone 3 acceptance step.
 
 ### Troubleshooting
 
-If `lab` fails with `ModuleNotFoundError: No module named 'lab_cli'` on macOS,
-set `PYTHONPATH` and the problem goes away for good:
+**`ModuleNotFoundError: No module named 'lab_cli'` on macOS.** The cause is
+almost always that the virtualenv sits in an iCloud-synced folder. If `Desktop
+& Documents Folders` syncing is on, everything under `~/Documents` is managed
+by iCloud, which sets the macOS `hidden` flag on the files it manages — and
+CPython's `site` module skips hidden `.pth` files, so the editable install's
+path file is ignored and the packages become invisible.
+
+Check with:
 
 ```bash
-export PYTHONPATH=/path/to/Investigation-console/packages
+ls -lO .venv/lib/python3.12/site-packages/*.pth     # "hidden" in the flags column
+defaults read com.apple.finder FXICloudDriveDesktop # 1 means Documents is synced
 ```
 
-What happens without it: uv marks every file it writes with the macOS `hidden`
-flag, and CPython's `site` module skips hidden `.pth` files — so the editable
-install's path file is ignored and the packages become invisible. `chflags
-nohidden .venv/lib/python3.12/site-packages/*.pth` clears it, but only until
-the next re-sync, and `uv run` re-syncs the project on almost every invocation,
-so the failure comes straight back. `uv sync --no-editable` installs real
-directories that are immune, but the next `uv run` reverts it. Setting
-`PYTHONPATH` sidesteps the mechanism entirely and survives all of it.
+Keep the environment out of the synced folder:
+
+```bash
+export UV_PROJECT_ENVIRONMENT="$HOME/.venvs/lab-platform"   # put this in ~/.zshrc
+uv sync
+```
+
+`chflags nohidden …` clears the flag but iCloud re-applies it, and
+`uv sync --no-editable` is reverted by the next `uv run`; neither is a fix.
+
+Better still, keep the whole repository outside iCloud (`~/Developer`, for
+instance). Syncing a `.git` directory and a virtualenv through iCloud is slow
+and can evict files into `.icloud` placeholders, which breaks builds in more
+confusing ways than a missing module.
 
 The test suite is unaffected either way: it adds `packages/` and `apps/` to the
 path itself.
